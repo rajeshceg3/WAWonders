@@ -1,3 +1,4 @@
+import './style.css';
 import { locations } from './data.js';
 import { WAWondersApp } from './app.js';
 

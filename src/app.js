@@ -98,11 +98,30 @@ export class WAWondersApp {
             this.detailView.removeChild(this.detailView.firstChild);
         }
 
+        // Hero Container
+        const heroDiv = document.createElement('div');
+        heroDiv.className = 'detail-hero';
+
         const img = document.createElement('img');
         img.src = location.imageUrl;
         img.alt = location.name;
         img.loading = 'lazy';
         img.decoding = 'async';
+
+        heroDiv.appendChild(img);
+
+        // Content Container
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'detail-content';
+
+        // Back Button
+        const backBtn = document.createElement('button');
+        backBtn.className = 'back-button';
+        backBtn.innerHTML = '← Back to list';
+        backBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.showListView();
+        };
 
         const h2 = document.createElement('h2');
         h2.textContent = location.name;
@@ -110,9 +129,12 @@ export class WAWondersApp {
         const p = document.createElement('p');
         p.textContent = location.description;
 
-        this.detailView.appendChild(img);
-        this.detailView.appendChild(h2);
-        this.detailView.appendChild(p);
+        contentDiv.appendChild(backBtn);
+        contentDiv.appendChild(h2);
+        contentDiv.appendChild(p);
+
+        this.detailView.appendChild(heroDiv);
+        this.detailView.appendChild(contentDiv);
 
         this.detailView.style.display = 'block';
         this.locationListContainer.style.display = 'none';

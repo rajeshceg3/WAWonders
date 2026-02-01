@@ -36,7 +36,8 @@ test.describe('User Journey', () => {
 
   test('Clicking list item opens details', async ({ page }) => {
       const listItem = page.locator('#location-list li').first();
-      const locationName = await listItem.textContent();
+      // Only get the text from the first span (the name), ignoring the arrow
+      const locationName = await listItem.locator('span').first().textContent();
 
       await listItem.click();
 

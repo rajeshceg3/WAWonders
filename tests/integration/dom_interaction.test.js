@@ -15,8 +15,9 @@ const mockMap = {
 const mockMarker = {
     addTo: jest.fn().mockReturnThis(),
     bindPopup: jest.fn().mockReturnThis(),
-    on: jest.fn(), // We will manually trigger this if needed
-    _icon: { classList: { toggle: jest.fn() } }
+    on: jest.fn(),
+    _icon: { classList: { toggle: jest.fn(), add: jest.fn(), remove: jest.fn() } },
+    setZIndexOffset: jest.fn()
 };
 
 const mockL = {
@@ -48,12 +49,17 @@ describe('DOM Integration', () => {
 
     test('Clicking a list item should trigger selectLocation', () => {
         const listItem = document.querySelector('#location-list li');
+
+        jest.useFakeTimers();
         listItem.click();
+        jest.runAllTimers();
 
         // Check side effects of selectLocation
         expect(mockMap.flyTo).toHaveBeenCalled();
         expect(document.getElementById('detail-view').innerHTML).toContain('Test Loc');
         expect(document.getElementById('detail-view').querySelector('img').src).toContain('img.jpg');
+
+        jest.useRealTimers();
     });
 
     test('Clicking close button should close drawer', () => {
@@ -63,8 +69,13 @@ describe('DOM Integration', () => {
         // Simulate open state
         drawer.classList.add('active');
 
+        jest.useFakeTimers();
         closeBtn.click();
 
+        // closeDrawer removes active class immediately
         expect(drawer.classList.contains('active')).toBe(false);
+
+        jest.runAllTimers();
+        jest.useRealTimers();
     });
 });

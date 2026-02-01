@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0b1016">
+    <meta name="theme-color" content="#050505">
     <title>Western Australia: A Natural Canvas [SECURE]</title>
     
     <!-- MITIGATION FOR VULN-001: Added Subresource Integrity (SRI) hashes. This prevents CDN compromise from leading to RCE. -->
@@ -15,6 +15,7 @@
     <div id="map"></div>
 
     <div id="info-drawer">
+        <div class="drawer-handle"></div>
         <!-- MITIGATION FOR BUG-005: Use a semantic <button> for accessibility. -->
         <button class="close-button" id="close-drawer" aria-label="Close details panel">✕</button>
         <div class="drawer-header">

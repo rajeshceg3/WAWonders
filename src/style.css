@@ -1,7 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 :root {
     /* Color Palette - Ultrathink Midnight */
-    --color-bg: #050505; /* Deepest black-blue */
-    --color-surface: rgba(15, 15, 20, 0.75); /* Darker, richer frosted glass base */
+    --color-bg: #020202; /* Ultra-deep black */
+    --color-surface: rgba(15, 15, 20, 0.65); /* More translucent for glass effect */
     --color-surface-active: rgba(30, 35, 40, 0.9);
     --color-surface-border: rgba(255, 255, 255, 0.06);
     --color-surface-highlight: rgba(255, 255, 255, 0.1);
@@ -16,6 +18,7 @@
 
     --color-shadow-ambient: rgba(0, 0, 0, 0.6);
     --color-shadow-heavy: rgba(0, 0, 0, 0.9);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
     /* Layout & Spacing */
     --drawer-width: 440px; /* Slightly wider for better readability */
@@ -42,7 +45,7 @@
     --duration-slow: 800ms;
 
     /* Fonts */
-    --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --font-stack: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 /* Reset & Base */
@@ -121,6 +124,7 @@ body::before {
         border-radius: var(--radius-lg);
         transform: translateX(calc(-100% - var(--spacing-lg) * 2));
         box-shadow:
+            var(--shadow-glass),
             0 20px 40px var(--color-shadow-heavy),
             0 0 0 1px var(--color-surface-border),
             0 1px 0 var(--color-surface-highlight) inset;
@@ -132,14 +136,14 @@ body::before {
 
     /* Scrollbar Polish */
     ::-webkit-scrollbar {
-        width: 4px; /* Even thinner */
+        width: 6px;
     }
     ::-webkit-scrollbar-track {
         background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
         transition: background 0.2s;
     }
     ::-webkit-scrollbar-thumb:hover {
@@ -180,18 +184,24 @@ body::before {
 
     /* Handle for mobile */
     .drawer-handle {
-        width: 48px;
-        height: 5px;
-        background: rgba(255, 255, 255, 0.3);
+        width: 60px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.4);
         border-radius: 3px;
         margin: 16px auto 8px auto;
         flex-shrink: 0;
         box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
+    /* Larger touch target for close button on mobile */
+    .close-button {
+        width: 44px;
+        height: 44px;
+    }
+
     /* Move Leaflet controls up on mobile to avoid drawer overlap */
     .leaflet-bottom {
-        bottom: 68vh !important;
+        bottom: 70vh !important;
         transition: bottom var(--duration-normal) var(--ease-out-quart);
     }
 }
@@ -269,7 +279,7 @@ body::before {
 #location-list li:hover {
     background-color: rgba(255, 255, 255, 0.04);
     color: var(--color-text-main);
-    transform: translateX(4px);
+    transform: translateY(-1px) scale(1.005);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     border-color: rgba(255,255,255,0.05);
 }
@@ -412,6 +422,13 @@ body::before {
                 background-color var(--duration-fast) ease,
                 box-shadow var(--duration-fast) ease;
     cursor: pointer;
+    animation: markerPulseIdle 3s infinite;
+}
+
+@keyframes markerPulseIdle {
+    0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.2), 0 0 10px var(--color-primary); }
+    50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0), 0 0 15px var(--color-primary); }
+    100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.2), 0 0 10px var(--color-primary); }
 }
 
 .custom-marker:hover, .custom-marker.highlighted {
@@ -471,9 +488,9 @@ body::before {
 
 /* Popup Glass */
 .leaflet-popup-content-wrapper {
-    background: rgba(10, 10, 15, 0.9) !important;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(10, 10, 15, 0.8) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     color: var(--color-text-main) !important;
     border-radius: var(--radius-md) !important;
     border: 1px solid var(--color-surface-border);

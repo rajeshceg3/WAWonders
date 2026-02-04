@@ -267,7 +267,12 @@ export class WAWondersApp {
             }
         }
         this.locationList.querySelectorAll('li').forEach(li => {
-            li.classList.toggle('selected', li.dataset.id === activeId);
+            const isSelected = li.dataset.id === activeId;
+            li.classList.toggle('selected', isSelected);
+            if (isSelected && typeof li.scrollIntoView === 'function') {
+                // Smoothly scroll the selected item into view if not visible
+                li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         });
     }
 

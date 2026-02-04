@@ -3,10 +3,10 @@
 :root {
     /* Color Palette - Ultrathink Midnight */
     --color-bg: #020202; /* Ultra-deep black */
-    --color-surface: rgba(15, 15, 20, 0.65); /* More translucent for glass effect */
-    --color-surface-active: rgba(30, 35, 40, 0.9);
-    --color-surface-border: rgba(255, 255, 255, 0.06);
-    --color-surface-highlight: rgba(255, 255, 255, 0.1);
+    --color-surface: rgba(10, 10, 12, 0.75); /* Richer glass effect */
+    --color-surface-active: rgba(30, 35, 40, 0.85);
+    --color-surface-border: rgba(255, 255, 255, 0.08);
+    --color-surface-highlight: rgba(255, 255, 255, 0.12);
 
     --color-primary: #38bdf8; /* Sky blue/Cyan - vibrant but not neon */
     --color-primary-glow: rgba(56, 189, 248, 0.4);
@@ -18,7 +18,7 @@
 
     --color-shadow-ambient: rgba(0, 0, 0, 0.6);
     --color-shadow-heavy: rgba(0, 0, 0, 0.9);
-    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 
     /* Layout & Spacing */
     --drawer-width: 440px; /* Slightly wider for better readability */
@@ -40,6 +40,7 @@
     --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+    --animation-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     --duration-fast: 200ms;
     --duration-normal: 400ms;
     --duration-slow: 800ms;
@@ -79,8 +80,9 @@ body::before {
     height: 100%;
     pointer-events: none;
     z-index: 9999;
-    opacity: 0.03;
+    opacity: 0.045;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
 }
 
 /* Map Container */
@@ -128,26 +130,38 @@ body::before {
             0 20px 40px var(--color-shadow-heavy),
             0 0 0 1px var(--color-surface-border),
             0 1px 0 var(--color-surface-highlight) inset;
+        /* Subtle white gradient border effect via background clip */
+        background-image:
+            linear-gradient(var(--color-surface), var(--color-surface)),
+            linear-gradient(to bottom right, rgba(255,255,255,0.15), rgba(255,255,255,0.02));
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
     }
 
     #info-drawer.active {
         transform: translateX(0);
     }
 
-    /* Scrollbar Polish */
+    /* Scrollbar Polish - "Invisible" until needed */
     ::-webkit-scrollbar {
-        width: 6px;
+        width: 4px;
+        height: 4px;
     }
     ::-webkit-scrollbar-track {
         background: transparent;
     }
     ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0); /* Invisible by default */
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+    /* Show scrollbar on hover of container */
+    #location-list-container:hover::-webkit-scrollbar-thumb,
+    #detail-view:hover::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
-        transition: background 0.2s;
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.4) !important;
     }
 }
 
@@ -160,7 +174,7 @@ body::before {
         bottom: 0;
         width: 100%;
         height: 65vh; /* Optimal reachability */
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        border-radius: 24px 24px 0 0; /* Balanced curvature */
         transform: translateY(100%);
         border-left: none;
         border-right: none;
@@ -169,6 +183,7 @@ body::before {
         padding-bottom: env(safe-area-inset-bottom);
         /* Mobile-specific backdrop enhancement */
         backdrop-filter: blur(40px) saturate(200%);
+        transition: transform 0.5s var(--animation-spring), opacity 0.4s ease;
     }
 
     #info-drawer.active {
@@ -177,26 +192,27 @@ body::before {
 
     /* Larger Touch Targets for Mobile */
     #location-list li {
-        min-height: 56px;
+        min-height: 60px; /* Even larger for easier tapping */
         padding: var(--spacing-md) var(--spacing-lg);
         margin-bottom: var(--spacing-sm);
     }
 
     /* Handle for mobile */
     .drawer-handle {
-        width: 60px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.4);
-        border-radius: 3px;
-        margin: 16px auto 8px auto;
+        width: 40px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        margin: 12px auto 8px auto;
         flex-shrink: 0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
 
     /* Larger touch target for close button on mobile */
     .close-button {
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.1); /* Slightly more visible on mobile */
     }
 
     /* Move Leaflet controls up on mobile to avoid drawer overlap */
@@ -277,11 +293,14 @@ body::before {
 }
 
 #location-list li:hover {
-    background-color: rgba(255, 255, 255, 0.04);
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: brightness(1.2); /* "Light from within" */
     color: var(--color-text-main);
-    transform: translateY(-1px) scale(1.005);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    border-color: rgba(255,255,255,0.05);
+    transform: translateX(4px); /* Slide slightly right instead of up */
+    box-shadow:
+        0 4px 20px rgba(0,0,0,0.3),
+        inset 1px 0 0 0 var(--color-primary); /* Left border highlight */
+    border-color: rgba(255,255,255,0.08);
 }
 
 /* Arrow Interaction */
@@ -353,10 +372,20 @@ body::before {
 
 .detail-content {
     padding: 0 var(--spacing-lg) var(--spacing-2xl);
-    animation: contentFadeUp 0.6s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    opacity: 0;
+}
+
+.detail-content h2,
+.detail-content p,
+.detail-content .back-button {
     opacity: 0;
     transform: translateY(20px);
+    animation: contentFadeUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
+
+.detail-content .back-button { animation-delay: 0.1s; }
+.detail-content h2 { animation-delay: 0.2s; }
+.detail-content p { animation-delay: 0.3s; }
 
 @keyframes contentFadeUp {
     to { opacity: 1; transform: translateY(0); }
@@ -418,11 +447,12 @@ body::before {
     border: 2px solid var(--color-primary);
     border-radius: 50%;
     box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2), 0 0 15px var(--color-primary);
-    transition: transform var(--duration-fast) var(--ease-out-quart),
+    transition: transform 0.4s var(--animation-spring),
                 background-color var(--duration-fast) ease,
                 box-shadow var(--duration-fast) ease;
     cursor: pointer;
-    animation: markerPulseIdle 3s infinite;
+    will-change: transform;
+    animation: markerPulseIdle 4s infinite ease-in-out;
 }
 
 @keyframes markerPulseIdle {
@@ -462,13 +492,23 @@ body::before {
 /* Leaflet UI Overrides - Glass Theme */
 .leaflet-control-zoom {
     border: none !important;
-    background: var(--color-surface) !important;
+    background: rgba(10, 10, 12, 0.85) !important; /* Slightly more opaque for controls */
     backdrop-filter: blur(16px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+    box-shadow:
+        0 8px 24px rgba(0,0,0,0.4),
+        0 0 0 1px rgba(255,255,255,0.1) !important;
     border-radius: var(--radius-md) !important;
     overflow: hidden;
     margin-right: var(--spacing-lg) !important;
     margin-bottom: var(--spacing-lg) !important;
+    transition: transform 0.2s ease;
+}
+
+.leaflet-control-zoom:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 12px 30px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,255,255,0.15) !important;
 }
 
 .leaflet-control-zoom-in, .leaflet-control-zoom-out {
@@ -476,9 +516,9 @@ body::before {
     background: transparent !important;
     border-bottom: 1px solid rgba(255,255,255,0.08) !important;
     font-size: 20px !important;
-    width: 40px !important;
-    height: 40px !important;
-    line-height: 40px !important;
+    width: 44px !important; /* Larger touch target */
+    height: 44px !important;
+    line-height: 44px !important;
     transition: background 0.2s;
 }
 

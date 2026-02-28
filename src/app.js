@@ -41,6 +41,15 @@ export class WAWondersApp {
         // Initially open drawer
         if (this.drawer) {
             setTimeout(() => this.drawer.classList.add('active'), 500);
+
+            // Mouse tracking for CSS spotlight effect
+            this.drawer.addEventListener('mousemove', (e) => {
+                const rect = this.drawer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                this.drawer.style.setProperty('--mouse-x', `${x}px`);
+                this.drawer.style.setProperty('--mouse-y', `${y}px`);
+            });
         }
     }
 
@@ -72,6 +81,11 @@ export class WAWondersApp {
         li.innerHTML = `<span>${location.name}</span> <span style="opacity:0.5">→</span>`;
         li.dataset.id = location.id;
         li.setAttribute('tabindex', '0');
+
+        // Staggered entrance animation delay based on index
+        const index = this.locationList.children.length;
+        li.style.animationDelay = `${0.1 + (index * 0.05)}s`;
+
         this.locationList.appendChild(li);
 
         const handleSelection = () => this.selectLocation(location.id);

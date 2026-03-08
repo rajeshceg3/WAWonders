@@ -1,9 +1,12 @@
+import { SoundManager } from './audio.js';
+
 export class WAWondersApp {
     constructor(mapInstance, locations) {
         this.map = mapInstance;
         this.locations = locations;
         this.markers = {};
         this.isAnimating = false;
+        this.soundManager = new SoundManager();
 
         // Bind DOM elements
         this.drawer = document.getElementById('info-drawer');
@@ -11,6 +14,7 @@ export class WAWondersApp {
         this.locationListContainer = document.getElementById('location-list-container');
         this.detailView = document.getElementById('detail-view');
         this.closeButton = document.getElementById('close-drawer');
+        this.audioToggleBtn = document.getElementById('audio-toggle');
     }
 
     init() {
@@ -22,11 +26,43 @@ export class WAWondersApp {
 
         this.locations.forEach(location => this.addLocation(location));
 
+        // Initialize sound manager on first user interaction
+        const initAudio = () => {
+            this.soundManager.init();
+            document.removeEventListener('click', initAudio);
+            document.removeEventListener('keydown', initAudio);
+        };
+        document.addEventListener('click', initAudio);
+        document.addEventListener('keydown', initAudio);
+
+        if (this.audioToggleBtn) {
+            this.audioToggleBtn.addEventListener('click', () => {
+                const isMuted = this.soundManager.toggleMute();
+                this.soundManager.playClickSound(); // Play sound if we just unmuted
+
+                const mutedIcon = this.audioToggleBtn.querySelector('.audio-icon-muted');
+                const unmutedIcon = this.audioToggleBtn.querySelector('.audio-icon-unmuted');
+
+                if (isMuted) {
+                    mutedIcon.style.display = 'block';
+                    unmutedIcon.style.display = 'none';
+                    this.audioToggleBtn.classList.remove('active');
+                } else {
+                    mutedIcon.style.display = 'none';
+                    unmutedIcon.style.display = 'block';
+                    this.audioToggleBtn.classList.add('active');
+                }
+            });
+            this.audioToggleBtn.addEventListener('mouseenter', () => this.soundManager.playHoverSound());
+        }
+
         if (this.closeButton) {
             this.closeButton.addEventListener('click', (e) => {
                 e.stopPropagation();
+                this.soundManager.playClickSound();
                 this.closeDrawer();
             });
+            this.closeButton.addEventListener('mouseenter', () => this.soundManager.playHoverSound());
         }
 
         if (this.map) {
@@ -88,7 +124,11 @@ export class WAWondersApp {
 
         this.locationList.appendChild(li);
 
-        const handleSelection = () => this.selectLocation(location.id);
+        const handleSelection = () => {
+            if (navigator.vibrate) navigator.vibrate([10]);
+            this.soundManager.playClickSound();
+            this.selectLocation(location.id);
+        };
 
         // Interaction Events
         marker.on('click', handleSelection);
@@ -105,6 +145,7 @@ export class WAWondersApp {
         // Bi-directional Highlighting
         // 1. Hover List Item -> Highlight Marker
         li.addEventListener('mouseenter', () => {
+            this.soundManager.playHoverSound();
             this.setHighlight(location.id, true);
         });
         li.addEventListener('mouseleave', () => {
@@ -113,6 +154,7 @@ export class WAWondersApp {
 
         // 2. Hover Marker -> Highlight List Item
         marker.on('mouseover', () => {
+            this.soundManager.playHoverSound();
             this.setHighlight(location.id, true);
         });
         marker.on('mouseout', () => {
@@ -170,6 +212,16 @@ export class WAWondersApp {
              this.isAnimating = false;
         }
 
+        // Determine biome based on location (simple heuristic based on keywords)
+        let biome = 'desert'; // default
+        const desc = location.description.toLowerCase();
+        if (desc.includes('reef') || desc.includes('beach') || desc.includes('ocean') || desc.includes('water') || desc.includes('bay')) {
+            biome = 'coastal';
+        } else if (desc.includes('forest') || desc.includes('park') || desc.includes('tree')) {
+            biome = 'forest';
+        }
+        this.soundManager.setBiome(biome);
+
         this.showDetailView(location);
         this.updateActiveStates(id);
 
@@ -206,8 +258,10 @@ export class WAWondersApp {
         backBtn.innerHTML = '← Back to list';
         backBtn.onclick = (e) => {
             e.stopPropagation();
+            this.soundManager.playClickSound();
             this.showListView();
         };
+        backBtn.onmouseenter = () => this.soundManager.playHoverSound();
 
         const h2 = document.createElement('h2');
         h2.textContent = location.name;
@@ -292,6 +346,9 @@ export class WAWondersApp {
 
     closeDrawer() {
         if (this.drawer) this.drawer.classList.remove('active');
+
+        this.soundManager.stopAmbience();
+
         // Reset to list view when closed, after a delay
         setTimeout(() => {
             this.showListView();

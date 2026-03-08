@@ -29,6 +29,48 @@ const mockL = {
 
 window.L = mockL;
 
+// Mock Web Audio API
+window.AudioContext = jest.fn().mockImplementation(() => ({
+    createGain: jest.fn(() => ({
+        connect: jest.fn(),
+        gain: { value: 0, setValueAtTime: jest.fn(), linearRampToValueAtTime: jest.fn(), exponentialRampToValueAtTime: jest.fn(), cancelScheduledValues: jest.fn(), setTargetAtTime: jest.fn() }
+    })),
+    createOscillator: jest.fn(() => ({
+        connect: jest.fn(),
+        start: jest.fn(),
+        stop: jest.fn(),
+        type: '',
+        frequency: { value: 0, setValueAtTime: jest.fn(), exponentialRampToValueAtTime: jest.fn() }
+    })),
+    createBuffer: jest.fn(() => ({
+        getChannelData: jest.fn(() => new Float32Array(100))
+    })),
+    createBufferSource: jest.fn(() => ({
+        connect: jest.fn(),
+        start: jest.fn(),
+        stop: jest.fn(),
+        disconnect: jest.fn(),
+        buffer: null,
+        loop: false
+    })),
+    createBiquadFilter: jest.fn(() => ({
+        connect: jest.fn(),
+        type: '',
+        frequency: { value: 0 },
+        Q: { value: 0 }
+    })),
+    destination: {},
+    currentTime: 0,
+    state: 'running',
+    resume: jest.fn()
+}));
+
+// Mock Navigator
+Object.defineProperty(global.navigator, 'vibrate', {
+    value: jest.fn(),
+    configurable: true
+});
+
 describe('WAWondersApp Logic', () => {
     let app;
     const locations = [
@@ -38,6 +80,10 @@ describe('WAWondersApp Logic', () => {
     beforeEach(() => {
         // Setup DOM
         document.body.innerHTML = `
+            <button id="audio-toggle">
+                <svg class="audio-icon-muted"></svg>
+                <svg class="audio-icon-unmuted"></svg>
+            </button>
             <div id="info-drawer"></div>
             <ul id="location-list"></ul>
             <div id="location-list-container"></div>

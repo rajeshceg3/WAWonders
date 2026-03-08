@@ -105,6 +105,59 @@ body::after {
 
 /*
    ----------------------------------------------------------------
+   AUDIO TOGGLE
+   ----------------------------------------------------------------
+*/
+.audio-toggle {
+    position: absolute;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-surface-border);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 4px 16px var(--color-shadow-ambient);
+    transition: all 0.3s var(--ease-out-quart);
+    outline: none;
+}
+
+.audio-toggle:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: var(--color-surface-active);
+    color: var(--color-text-main);
+    box-shadow: 0 8px 24px var(--color-shadow-heavy);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.audio-toggle.active {
+    color: var(--color-primary);
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.audio-toggle.active:hover {
+    background: rgba(56, 189, 248, 0.2);
+}
+
+@media (max-width: 768px) {
+    .audio-toggle {
+        top: 12px;
+        right: 12px;
+    }
+}
+
+/*
+   ----------------------------------------------------------------
    GLASS DRAWER (Desktop & Mobile Unified Logic)
    ----------------------------------------------------------------
 */

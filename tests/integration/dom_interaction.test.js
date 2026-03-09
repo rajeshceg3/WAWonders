@@ -79,11 +79,15 @@ describe('DOM Integration', () => {
 
     beforeEach(() => {
         document.body.innerHTML = `
-            <div id="info-drawer"></div>
-            <ul id="location-list"></ul>
-            <div id="location-list-container"></div>
-            <div id="detail-view"></div>
-            <button id="close-drawer"></button>
+            <div id="info-drawer">
+                <div id="views-container">
+                    <div id="location-list-container">
+                        <ul id="location-list"></ul>
+                    </div>
+                    <div id="detail-view"></div>
+                </div>
+                <button id="close-drawer"></button>
+            </div>
         `;
         app = new WAWondersApp(mockMap, locations);
         app.init();

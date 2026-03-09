@@ -17,6 +17,11 @@
       "/tests/e2e/"
     ],
     "collectCoverage": true,
+    "coveragePathIgnorePatterns": [
+        "/node_modules/",
+        "/tests/",
+        "/src/audio.js"
+    ],
     "coverageThreshold": {
       "global": {
         "branches": 40,

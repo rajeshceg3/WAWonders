@@ -362,12 +362,32 @@ body::after {
     transform: scale(1.05);
 }
 
+/* Views Container - Native Navigation */
+#views-container {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden; /* Contains horizontal sliding */
+    display: flex;
+}
+
 /* List View */
 #location-list-container {
-    flex-grow: 1;
+    flex-shrink: 0;
+    width: 100%;
+    height: 100%;
     overflow-y: auto;
     padding: 0 var(--spacing-md) var(--spacing-lg);
     -webkit-overflow-scrolling: touch;
+    transition: transform 0.4s var(--ease-out-quart), opacity 0.4s ease;
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* State when sliding out to detail view */
+#location-list-container.slide-out-left {
+    transform: translateX(-30%);
+    opacity: 0;
+    pointer-events: none;
 }
 
 #location-list {
@@ -431,18 +451,25 @@ body::after {
 
 /* Detail View */
 #detail-view {
-    flex-grow: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     overflow-y: auto;
     padding: 0;
-    display: none;
+    display: none; /* Initially hidden, managed by JS */
     opacity: 0;
-    transform: translateY(10px);
-    transition: opacity var(--duration-normal) ease, transform var(--duration-normal) var(--ease-out-quart);
+    transform: translateX(100%);
+    transition: transform 0.4s var(--ease-out-quart), opacity 0.4s ease;
+    z-index: 2; /* Ensure it overlays the list properly during transition */
+    background-color: var(--color-surface); /* solid background needed during slide to cover list */
 }
 
+/* Base class visible triggers the end state of slide in */
 #detail-view.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
 }
 
 .detail-hero {

@@ -18,12 +18,6 @@ export class WAWondersApp {
     }
 
     init() {
-        // Apply inline styles for transition that we might have missed in CSS
-        if (this.locationListContainer) {
-            this.locationListContainer.style.transition = 'opacity 0.3s ease';
-            this.locationListContainer.style.opacity = '1';
-        }
-
         this.locations.forEach(location => this.addLocation(location));
 
         // Initialize sound manager on first user interaction
@@ -86,6 +80,71 @@ export class WAWondersApp {
                 this.drawer.style.setProperty('--mouse-x', `${x}px`);
                 this.drawer.style.setProperty('--mouse-y', `${y}px`);
             });
+
+            // Mobile Swipe-down to Close Gestures
+            this.initMobileGestures();
+        }
+    }
+
+    initMobileGestures() {
+        if (!this.drawer) return;
+
+        const header = this.drawer.querySelector('.drawer-header');
+        const handle = this.drawer.querySelector('.drawer-handle');
+
+        if (!header && !handle) return;
+
+        let startY = 0;
+        let currentY = 0;
+        let isDragging = false;
+
+        const onTouchStart = (e) => {
+            if (window.innerWidth > 768) return; // Only apply on mobile
+            startY = e.touches[0].clientY;
+            isDragging = true;
+            this.drawer.style.transition = 'none'; // Disable transition for 1:1 finger tracking
+        };
+
+        const onTouchMove = (e) => {
+            if (!isDragging) return;
+            currentY = e.touches[0].clientY;
+            const deltaY = currentY - startY;
+
+            // Only allow dragging downwards
+            if (deltaY > 0) {
+                e.preventDefault(); // Prevent scrolling the content
+                this.drawer.style.transform = `translateY(${deltaY}px)`;
+            }
+        };
+
+        const onTouchEnd = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            this.drawer.style.transition = ''; // Restore CSS transition
+
+            const deltaY = currentY - startY;
+            // If dragged down by more than 100px or fast swipe, close it
+            if (deltaY > 100) {
+                this.drawer.style.transform = ''; // Clear inline transform
+                this.closeDrawer();
+            } else {
+                // Snap back up
+                this.drawer.style.transform = '';
+            }
+        };
+
+        // Attach events to handle or header for drag
+        if (handle) {
+            handle.addEventListener('touchstart', onTouchStart, { passive: true });
+            handle.addEventListener('touchmove', onTouchMove, { passive: false });
+            handle.addEventListener('touchend', onTouchEnd);
+        }
+
+        if (header) {
+            header.addEventListener('touchstart', onTouchStart, { passive: true });
+            header.addEventListener('touchmove', onTouchMove, { passive: false });
+            header.addEventListener('touchend', onTouchEnd);
         }
     }
 
@@ -277,35 +336,42 @@ export class WAWondersApp {
         this.detailView.appendChild(contentDiv);
 
         // Transition Logic: List Out -> Detail In
-        this.locationListContainer.style.opacity = '0';
+        // Show detail view behind the scene but ready to slide in
+        this.detailView.style.display = 'block';
+
+        // Force reflow to enable transition
+        void this.detailView.offsetWidth;
+
+        // Trigger slide animations
+        this.locationListContainer.classList.add('slide-out-left');
+        this.detailView.classList.add('visible');
 
         setTimeout(() => {
+            // Once transition finishes, hide list for performance
             this.locationListContainer.style.display = 'none';
-            this.detailView.style.display = 'block';
-
-            // Force reflow to enable transition
-            void this.detailView.offsetWidth;
-
-            this.detailView.classList.add('visible');
-        }, 300); // Matches CSS transition time
+        }, 400); // Matches CSS transition time
     }
 
     showListView() {
         if (!this.detailView || !this.locationListContainer) return;
 
         // Transition Logic: Detail Out -> List In
+
+        // Ensure list is display block again before sliding back
+        this.locationListContainer.style.display = 'block';
+
+        // Force reflow
+        void this.locationListContainer.offsetWidth;
+
+        // Remove slide classes to trigger return animations
         this.detailView.classList.remove('visible');
+        this.locationListContainer.classList.remove('slide-out-left');
 
         setTimeout(() => {
+            // Once transition finishes, hide detail
             this.detailView.style.display = 'none';
-            this.locationListContainer.style.display = 'block';
-
-            // Force reflow
-            void this.locationListContainer.offsetWidth;
-
-            this.locationListContainer.style.opacity = '1';
             this.updateActiveStates(null);
-        }, 300);
+        }, 400); // Matches CSS transition time
 
         if (this.isAnimating) return;
         this.isAnimating = true;

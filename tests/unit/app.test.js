@@ -84,11 +84,17 @@ describe('WAWondersApp Logic', () => {
                 <svg class="audio-icon-muted"></svg>
                 <svg class="audio-icon-unmuted"></svg>
             </button>
-            <div id="info-drawer"></div>
-            <ul id="location-list"></ul>
-            <div id="location-list-container"></div>
-            <div id="detail-view"></div>
-            <button id="close-drawer"></button>
+            <div id="info-drawer">
+                <div class="drawer-header"></div>
+                <div class="drawer-handle"></div>
+                <div id="views-container">
+                    <div id="location-list-container">
+                        <ul id="location-list"></ul>
+                    </div>
+                    <div id="detail-view"></div>
+                </div>
+                <button id="close-drawer"></button>
+            </div>
         `;
 
         jest.clearAllMocks();
@@ -102,6 +108,32 @@ describe('WAWondersApp Logic', () => {
         const listItems = document.querySelectorAll('#location-list li');
         expect(listItems.length).toBe(1);
         expect(listItems[0].textContent).toContain('Test Loc');
+    });
+
+    test('mobile swipe down gesture should close drawer', () => {
+        window.innerWidth = 500; // simulate mobile
+        app.init();
+
+        const header = document.querySelector('.drawer-header');
+
+        // Setup initial state
+        app.drawer.style.transform = '';
+        app.drawer.classList.add('active');
+
+        // Simulate dragging down 150px
+        const touchStartEvent = new Event('touchstart');
+        touchStartEvent.touches = [{ clientY: 100 }];
+        header.dispatchEvent(touchStartEvent);
+
+        const touchMoveEvent = new Event('touchmove');
+        touchMoveEvent.touches = [{ clientY: 250 }];
+        header.dispatchEvent(touchMoveEvent);
+
+        const touchEndEvent = new Event('touchend');
+        header.dispatchEvent(touchEndEvent);
+
+        // Verify drawer close was triggered
+        expect(app.drawer.classList.contains('active')).toBe(false);
     });
 
     test('selectLocation should update state and fly map', () => {

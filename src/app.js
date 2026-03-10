@@ -7,6 +7,7 @@ export class WAWondersApp {
         this.markers = {};
         this.isAnimating = false;
         this.soundManager = new SoundManager();
+        this.currentFlightPath = null;
 
         // Bind DOM elements
         this.drawer = document.getElementById('info-drawer');
@@ -16,6 +17,10 @@ export class WAWondersApp {
         this.closeButton = document.getElementById('close-drawer');
         this.audioToggleBtn = document.getElementById('audio-toggle');
         this.coordTracker = document.getElementById('coordinate-tracker');
+
+        this.parallaxMoveHandler = null;
+        this.parallaxLeaveHandler = null;
+        this.flightPathTimeoutId = null;
     }
 
     init() {
@@ -281,8 +286,16 @@ export class WAWondersApp {
             return;
         }
 
-        // Fly to location
+        // Play whoosh sound for transition
+        this.soundManager.playFlySound();
+
+        // Fly to location and draw flight path
         if (this.map) {
+            const startLatLng = this.map.getCenter();
+            const endLatLng = L.latLng(location.coords);
+
+            this.drawFlightPath(startLatLng, endLatLng);
+
             this.map.flyTo(location.coords, 10, {
                 animate: true,
                 duration: 1.5,
@@ -290,6 +303,21 @@ export class WAWondersApp {
             });
             this.map.once('moveend', () => {
                 this.isAnimating = false;
+                if (this.currentFlightPath) {
+                    // Fade out
+                    if (this.currentFlightPath._path) {
+                        this.currentFlightPath._path.style.opacity = '0';
+                    }
+                    const pathToRemove = this.currentFlightPath;
+                    this.flightPathTimeoutId = setTimeout(() => {
+                        if (pathToRemove && this.map) {
+                            this.map.removeLayer(pathToRemove);
+                            if (this.currentFlightPath === pathToRemove) {
+                                this.currentFlightPath = null;
+                            }
+                        }
+                    }, 500);
+                }
             });
         } else {
              this.isAnimating = false;
@@ -371,6 +399,33 @@ export class WAWondersApp {
         this.detailView.appendChild(heroDiv);
         this.detailView.appendChild(contentDiv);
 
+        // Cleanup previous handlers if any
+        if (this.parallaxMoveHandler) {
+            this.detailView.removeEventListener('mousemove', this.parallaxMoveHandler);
+        }
+        if (this.parallaxLeaveHandler) {
+            this.detailView.removeEventListener('mouseleave', this.parallaxLeaveHandler);
+        }
+
+        // Add mousemove for hero parallax effect
+        this.parallaxMoveHandler = (e) => {
+            if (window.innerWidth <= 768) return; // Disable on mobile
+            const rect = heroDiv.getBoundingClientRect();
+            // Calculate mouse position relative to center of the image, normalized between -1 and 1
+            const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+            const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+
+            heroDiv.style.setProperty('--hero-x', `${x}`);
+            heroDiv.style.setProperty('--hero-y', `${y}`);
+        };
+        this.parallaxLeaveHandler = () => {
+            heroDiv.style.setProperty('--hero-x', `0`);
+            heroDiv.style.setProperty('--hero-y', `0`);
+        };
+
+        this.detailView.addEventListener('mousemove', this.parallaxMoveHandler);
+        this.detailView.addEventListener('mouseleave', this.parallaxLeaveHandler);
+
         // Transition Logic: List Out -> Detail In
         // Show detail view behind the scene but ready to slide in
         this.detailView.style.display = 'block';
@@ -444,6 +499,54 @@ export class WAWondersApp {
                 li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         });
+    }
+
+    drawFlightPath(start, end) {
+        if (!this.map || !window.L) return;
+
+        if (this.currentFlightPath) {
+            this.map.removeLayer(this.currentFlightPath);
+        }
+
+        // Simple midpoint calculation for bezier curve
+        const latLngs = [];
+        const numPoints = 100;
+
+        // Calculate a control point to create an arc
+        // Offset perpendicular to the line connecting start and end
+        const dx = end.lng - start.lng;
+        const dy = end.lat - start.lat;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist === 0) return; // Handle exact same coordinates case
+
+        // Offset factor (adjust for arc height)
+        const offset = dist * 0.2;
+
+        const midX = (start.lng + end.lng) / 2 - dy * (offset / dist);
+        const midY = (start.lat + end.lat) / 2 + dx * (offset / dist);
+
+        for (let i = 0; i <= numPoints; i++) {
+            const t = i / numPoints;
+            const lat = (1 - t) * (1 - t) * start.lat + 2 * (1 - t) * t * midY + t * t * end.lat;
+            const lng = (1 - t) * (1 - t) * start.lng + 2 * (1 - t) * t * midX + t * t * end.lng;
+            latLngs.push([lat, lng]);
+        }
+
+        this.currentFlightPath = L.polyline(latLngs, {
+            color: '#38bdf8', // var(--color-primary)
+            weight: 2,
+            opacity: 0, // Starts at 0, faded in via JS/CSS class
+            className: 'flight-path',
+            interactive: false
+        }).addTo(this.map);
+
+        // Force reflow and fade in
+        setTimeout(() => {
+             if (this.currentFlightPath && this.currentFlightPath._path) {
+                 this.currentFlightPath._path.style.opacity = '0.6';
+             }
+        }, 50);
     }
 
     closeDrawer() {

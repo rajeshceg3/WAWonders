@@ -225,6 +225,36 @@ export class SoundManager {
         // Procedural bird chirps could be added here, but keeping it simple for now
     }
 
+    playFlySound() {
+        if (this.isMuted || !this.ctx) return;
+
+        const t = this.ctx.currentTime;
+
+        // Use short burst of bandpass filtered noise for a "whoosh" effect
+        const noiseNode = this._createNoise();
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.Q.value = 1.0;
+
+        // Sweep frequency up then down
+        filter.frequency.setValueAtTime(400, t);
+        filter.frequency.exponentialRampToValueAtTime(1500, t + 0.75);
+        filter.frequency.exponentialRampToValueAtTime(400, t + 1.5);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.15, t + 0.75); // Peak volume in middle of flight
+        gain.gain.linearRampToValueAtTime(0, t + 1.5);
+
+        noiseNode.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+
+        noiseNode.start(t);
+        noiseNode.stop(t + 1.5);
+    }
+
     stopAmbience() {
         if (!this.ctx) return;
 

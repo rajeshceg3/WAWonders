@@ -15,6 +15,7 @@ export class WAWondersApp {
         this.detailView = document.getElementById('detail-view');
         this.closeButton = document.getElementById('close-drawer');
         this.audioToggleBtn = document.getElementById('audio-toggle');
+        this.coordTracker = document.getElementById('coordinate-tracker');
     }
 
     init() {
@@ -57,6 +58,18 @@ export class WAWondersApp {
                 this.closeDrawer();
             });
             this.closeButton.addEventListener('mouseenter', () => this.soundManager.playHoverSound());
+
+            // Magnetic micro-interaction
+            this.closeButton.addEventListener('mousemove', (e) => {
+                const rect = this.closeButton.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                this.closeButton.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+            });
+
+            this.closeButton.addEventListener('mouseleave', () => {
+                this.closeButton.style.transform = '';
+            });
         }
 
         if (this.map) {
@@ -64,6 +77,17 @@ export class WAWondersApp {
                 // If drawer is fully active (mobile or desktop), close it
                 if (this.drawer && this.drawer.classList.contains('active')) {
                     this.closeDrawer();
+                }
+            });
+
+            this.map.on('mousemove', (e) => {
+                if (this.coordTracker) {
+                    const lat = e.latlng.lat.toFixed(4);
+                    const lng = e.latlng.lng.toFixed(4);
+                    this.coordTracker.textContent = `LAT: ${lat} | LNG: ${lng}`;
+                    if (!this.coordTracker.classList.contains('active')) {
+                        this.coordTracker.classList.add('active');
+                    }
                 }
             });
         }
@@ -281,7 +305,7 @@ export class WAWondersApp {
         }
         this.soundManager.setBiome(biome);
 
-        this.showDetailView(location);
+        this.showDetailView(location, biome);
         this.updateActiveStates(id);
 
         if (this.drawer) {
@@ -289,8 +313,13 @@ export class WAWondersApp {
         }
     }
 
-    showDetailView(location) {
+    showDetailView(location, biome) {
         if (!this.detailView || !this.locationListContainer) return;
+
+        // Set the biome attribute for CSS styling
+        if (biome) {
+            this.detailView.setAttribute('data-biome', biome);
+        }
 
         // Clear previous content
         while(this.detailView.firstChild) {
@@ -325,11 +354,18 @@ export class WAWondersApp {
         const h2 = document.createElement('h2');
         h2.textContent = location.name;
 
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'detail-meta';
+        const formattedLat = location.coords[0].toFixed(4);
+        const formattedLng = location.coords[1].toFixed(4);
+        metaDiv.innerHTML = `<span class="biome-tag">${biome.toUpperCase()}</span><span class="detail-coords">${formattedLat}, ${formattedLng}</span>`;
+
         const p = document.createElement('p');
         p.textContent = location.description;
 
         contentDiv.appendChild(backBtn);
         contentDiv.appendChild(h2);
+        contentDiv.appendChild(metaDiv);
         contentDiv.appendChild(p);
 
         this.detailView.appendChild(heroDiv);

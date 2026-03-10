@@ -105,6 +105,47 @@ body::after {
 
 /*
    ----------------------------------------------------------------
+   COORDINATE TRACKER
+   ----------------------------------------------------------------
+*/
+#coordinate-tracker {
+    position: absolute;
+    bottom: var(--spacing-lg);
+    left: var(--spacing-lg);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-surface-border);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    z-index: 900;
+    pointer-events: none;
+    box-shadow: 0 4px 16px var(--color-shadow-ambient);
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#coordinate-tracker.active {
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    #coordinate-tracker {
+        bottom: 12px;
+        left: 12px;
+        font-size: 10px;
+        padding: 6px 12px;
+        display: none; /* Hide on mobile to save space */
+    }
+}
+
+/*
+   ----------------------------------------------------------------
    AUDIO TOGGLE
    ----------------------------------------------------------------
 */
@@ -504,6 +545,55 @@ body::after {
     opacity: 0.9;
 }
 
+/* Biome Visual Effects */
+#detail-view[data-biome="coastal"] .detail-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.2) 0%, transparent 100%);
+    mix-blend-mode: overlay;
+    z-index: 1;
+    pointer-events: none;
+    animation: waterShimmer 4s infinite alternate ease-in-out;
+}
+
+@keyframes waterShimmer {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.7; }
+}
+
+#detail-view[data-biome="desert"] .detail-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(253, 186, 116, 0.15) 0%, transparent 70%);
+    mix-blend-mode: color-dodge;
+    z-index: 1;
+    pointer-events: none;
+    animation: dustHaze 6s infinite alternate ease-in-out;
+}
+
+@keyframes dustHaze {
+    0% { transform: scale(1); opacity: 0.4; }
+    100% { transform: scale(1.1); opacity: 0.8; }
+}
+
+#detail-view[data-biome="forest"] .detail-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, rgba(34, 197, 94, 0.15) 0%, transparent 100%);
+    mix-blend-mode: soft-light;
+    z-index: 1;
+    pointer-events: none;
+    animation: dappledLight 8s infinite alternate ease-in-out;
+}
+
+@keyframes dappledLight {
+    0% { filter: brightness(1) contrast(1); }
+    100% { filter: brightness(1.1) contrast(1.05); }
+}
+
 .detail-content {
     padding: 0 var(--spacing-lg) var(--spacing-2xl);
     opacity: 0;
@@ -528,11 +618,39 @@ body::after {
 .detail-content h2 {
     font-size: 32px;
     font-weight: 800;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
     color: var(--color-text-main);
     letter-spacing: -0.03em;
     line-height: 1.1;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.detail-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: contentFadeUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: 0.25s;
+}
+
+.biome-tag {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-primary);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.05em;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.detail-coords {
+    color: var(--color-text-secondary);
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.05em;
 }
 
 .detail-content p {

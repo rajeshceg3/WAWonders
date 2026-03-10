@@ -6,7 +6,9 @@ import { WAWondersApp } from '../../src/app.js';
 
 // Mock Leaflet
 const mockMap = {
-    on: jest.fn(),
+    on: jest.fn((event, cb) => {
+        if (event === 'mousemove') mockMap._mousemoveCb = cb;
+    }),
     flyTo: jest.fn(),
     once: jest.fn((event, cb) => cb()), // Immediately trigger callback
     zoomControl: { setPosition: jest.fn() }
@@ -95,6 +97,7 @@ describe('WAWondersApp Logic', () => {
                 </div>
                 <button id="close-drawer"></button>
             </div>
+            <div id="coordinate-tracker"></div>
         `;
 
         jest.clearAllMocks();
@@ -108,6 +111,26 @@ describe('WAWondersApp Logic', () => {
         const listItems = document.querySelectorAll('#location-list li');
         expect(listItems.length).toBe(1);
         expect(listItems[0].textContent).toContain('Test Loc');
+    });
+
+    test('audio toggle click should toggle mute state', () => {
+        app.init();
+        const toggleBtn = document.getElementById('audio-toggle');
+        const mutedIcon = toggleBtn.querySelector('.audio-icon-muted');
+        const unmutedIcon = toggleBtn.querySelector('.audio-icon-unmuted');
+
+        // Initial state is muted (from SoundManager constructor)
+        // Click to unmute
+        toggleBtn.click();
+        expect(mutedIcon.style.display).toBe('none');
+        expect(unmutedIcon.style.display).toBe('block');
+        expect(toggleBtn.classList.contains('active')).toBe(true);
+
+        // Click to mute
+        toggleBtn.click();
+        expect(mutedIcon.style.display).toBe('block');
+        expect(unmutedIcon.style.display).toBe('none');
+        expect(toggleBtn.classList.contains('active')).toBe(false);
     });
 
     test('mobile swipe down gesture should close drawer', () => {
@@ -187,5 +210,45 @@ describe('WAWondersApp Logic', () => {
         expect(document.getElementById('detail-view').style.display).toBe('none');
         expect(document.getElementById('location-list-container').style.display).toBe('block');
         jest.useRealTimers();
+    });
+
+    test('map mousemove should update coordinate tracker', () => {
+        app.init();
+
+        // Trigger map mousemove
+        const mockEvent = { latlng: { lat: -25.27, lng: 122.5 } };
+        if (mockMap._mousemoveCb) {
+             mockMap._mousemoveCb(mockEvent);
+        }
+
+        const tracker = document.getElementById('coordinate-tracker');
+        expect(tracker.textContent).toBe('LAT: -25.2700 | LNG: 122.5000');
+        expect(tracker.classList.contains('active')).toBe(true);
+    });
+
+    test('closeButton hover should apply magnetic transform', () => {
+        app.init();
+        const btn = document.getElementById('close-drawer');
+
+        // Mock getBoundingClientRect
+        btn.getBoundingClientRect = jest.fn(() => ({
+            left: 100,
+            top: 100,
+            width: 30,
+            height: 30
+        }));
+
+        // Simulate mousemove on close button
+        const mousemove = new MouseEvent('mousemove', {
+            clientX: 120, // (120 - 100 - 15) = 5 * 0.3 = 1.5
+            clientY: 110  // (110 - 100 - 15) = -5 * 0.3 = -1.5
+        });
+        btn.dispatchEvent(mousemove);
+        expect(btn.style.transform).toBe('translate(1.5px, -1.5px)');
+
+        // Simulate mouseleave
+        const mouseleave = new MouseEvent('mouseleave');
+        btn.dispatchEvent(mouseleave);
+        expect(btn.style.transform).toBe('');
     });
 });

@@ -9,7 +9,9 @@ const mockMap = {
     on: jest.fn(),
     flyTo: jest.fn(),
     once: jest.fn((event, cb) => cb()),
-    zoomControl: { setPosition: jest.fn() }
+    zoomControl: { setPosition: jest.fn() },
+    getCenter: jest.fn(() => ({ lat: -25, lng: 122 })),
+    removeLayer: jest.fn()
 };
 
 const mockMarker = {
@@ -25,6 +27,8 @@ const mockL = {
     tileLayer: jest.fn(() => ({ addTo: jest.fn() })),
     divIcon: jest.fn(),
     marker: jest.fn(() => mockMarker),
+    latLng: jest.fn((coords) => ({ lat: coords[0], lng: coords[1] })),
+    polyline: jest.fn(() => ({ addTo: jest.fn() }))
 };
 
 window.L = mockL;

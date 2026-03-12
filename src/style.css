@@ -862,3 +862,61 @@ body::after {
 .leaflet-container a.leaflet-popup-close-button:hover {
     color: var(--color-text-main) !important;
 }
+
+/* Global Biome State Variables */
+body[data-biome="coastal"] {
+    --color-bg: #000c18;
+    --color-primary: #0ea5e9;
+    --color-primary-glow: rgba(14, 165, 233, 0.4);
+}
+
+body[data-biome="desert"] {
+    --color-bg: #180a00;
+    --color-primary: #f97316;
+    --color-primary-glow: rgba(249, 115, 22, 0.4);
+}
+
+body[data-biome="forest"] {
+    --color-bg: #001206;
+    --color-primary: #22c55e;
+    --color-primary-glow: rgba(34, 197, 94, 0.4);
+}
+
+/* Base Body Color transition */
+body {
+    transition: background-color 0.8s ease;
+}
+
+/* Dynamic Map Filter Transition */
+#map {
+    transition: filter 1.5s ease-in-out, background-color 0.8s ease;
+}
+
+body[data-biome="coastal"] #map {
+    filter: brightness(0.9) contrast(1.15) saturate(1.3) hue-rotate(-10deg);
+}
+
+body[data-biome="desert"] #map {
+    filter: brightness(0.9) contrast(1.2) saturate(1.4) sepia(0.4) hue-rotate(340deg);
+}
+
+body[data-biome="forest"] #map {
+    filter: brightness(0.85) contrast(1.15) saturate(1.2) sepia(0.3) hue-rotate(70deg);
+}
+
+/* Audio Toggle Pulse Animation */
+@keyframes pulseGlow {
+    0% {
+        box-shadow: 0 0 20px var(--color-primary-glow);
+    }
+    50% {
+        box-shadow: 0 0 35px var(--color-primary-glow), 0 0 10px var(--color-primary);
+    }
+    100% {
+        box-shadow: 0 0 20px var(--color-primary-glow);
+    }
+}
+
+.audio-toggle.active {
+    animation: pulseGlow 3s infinite ease-in-out;
+}

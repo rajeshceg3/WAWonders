@@ -228,15 +228,25 @@ export class WAWondersApp {
                 e.preventDefault();
                 handleSelection();
             }
-        });
-
-        // Bi-directional Highlighting
+        });        // Bi-directional Highlighting
         // 1. Hover List Item -> Highlight Marker
         li.addEventListener('mouseenter', () => {
             this.soundManager.playHoverSound();
             this.setHighlight(location.id, true);
         });
+        li.addEventListener('mousemove', (e) => {
+            const rect = li.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            // Max rotation is 5deg
+            const maxRotate = 5;
+            const rotateX = (y / (rect.height / 2)) * -maxRotate;
+            const rotateY = (x / (rect.width / 2)) * maxRotate;
+
+            li.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        });
         li.addEventListener('mouseleave', () => {
+            li.style.transform = '';
             this.setHighlight(location.id, false);
         });
 
@@ -334,6 +344,7 @@ export class WAWondersApp {
         this.soundManager.setBiome(biome);
 
         this.showDetailView(location, biome);
+        document.body.setAttribute('data-biome', biome);
         this.updateActiveStates(id);
 
         if (this.drawer) {
@@ -456,6 +467,7 @@ export class WAWondersApp {
 
         // Remove slide classes to trigger return animations
         this.detailView.classList.remove('visible');
+        document.body.removeAttribute('data-biome');
         this.locationListContainer.classList.remove('slide-out-left');
 
         setTimeout(() => {

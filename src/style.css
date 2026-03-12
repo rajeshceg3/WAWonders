@@ -49,6 +49,25 @@
     --font-stack: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
+[data-theme="light"] {
+    --color-bg: #f4f4f5; /* Zinc-100 */
+    --color-surface: rgba(255, 255, 255, 0.85);
+    --color-surface-active: rgba(244, 244, 245, 0.95);
+    --color-surface-border: rgba(0, 0, 0, 0.1);
+    --color-surface-highlight: rgba(0, 0, 0, 0.05);
+
+    --color-primary: #0284c7; /* Sky-600 */
+    --color-primary-glow: rgba(2, 132, 199, 0.3);
+
+    --color-text-main: #18181b; /* Zinc-900 */
+    --color-text-secondary: #52525b; /* Zinc-600 */
+    --color-text-tertiary: #a1a1aa; /* Zinc-400 */
+
+    --color-shadow-ambient: rgba(0, 0, 0, 0.15);
+    --color-shadow-heavy: rgba(0, 0, 0, 0.25);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
 /* Reset & Base */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -146,13 +165,19 @@ body::after {
 
 /*
    ----------------------------------------------------------------
-   AUDIO TOGGLE
+   TOP CONTROLS (Theme & Audio)
    ----------------------------------------------------------------
 */
-.audio-toggle {
+.top-controls {
     position: absolute;
     top: var(--spacing-lg);
     right: var(--spacing-lg);
+    display: flex;
+    gap: var(--spacing-sm);
+    z-index: 1000;
+}
+
+.control-btn {
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -165,36 +190,44 @@ body::after {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 1000;
     box-shadow: 0 4px 16px var(--color-shadow-ambient);
     transition: all 0.3s var(--ease-out-quart);
     outline: none;
 }
 
-.audio-toggle:hover {
+.control-btn:hover {
     transform: translateY(-2px) scale(1.05);
     background: var(--color-surface-active);
     color: var(--color-text-main);
     box-shadow: 0 8px 24px var(--color-shadow-heavy);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--color-surface-border);
 }
 
-.audio-toggle.active {
+.control-btn.active {
     color: var(--color-primary);
     background: rgba(56, 189, 248, 0.1);
     border-color: rgba(56, 189, 248, 0.3);
     box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
-.audio-toggle.active:hover {
+.control-btn.active:hover {
     background: rgba(56, 189, 248, 0.2);
 }
 
 @media (max-width: 768px) {
-    .audio-toggle {
+    .top-controls {
         top: 12px;
         right: 12px;
     }
+}
+
+/* Focus Styles for Accessibility */
+.control-btn:focus-visible,
+.search-input:focus-visible,
+.close-button:focus-visible,
+#location-list li:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 /*
@@ -365,10 +398,35 @@ body::after {
 .drawer-header {
     padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
     flex-shrink: 0;
     position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-surface-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-main);
+    font-family: var(--font-stack);
+    font-size: 14px;
+    backdrop-filter: blur(8px);
+    transition: all var(--duration-fast) ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.search-input::placeholder {
+    color: var(--color-text-secondary);
 }
 
 .drawer-header h1 {
@@ -547,6 +605,94 @@ body::after {
 }
 
 /* Biome Visual Effects */
+.biome-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
+}
+
+/* Coastal Bubbles */
+#detail-view[data-biome="coastal"] .biome-particles::before {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        10vw 0 0 2px rgba(255, 255, 255, 0.3),
+        30vw 0 0 4px rgba(255, 255, 255, 0.2),
+        50vw 0 0 1px rgba(255, 255, 255, 0.5),
+        70vw 0 0 3px rgba(255, 255, 255, 0.3),
+        90vw 0 0 5px rgba(255, 255, 255, 0.1);
+    animation: bubbleRise 8s linear infinite;
+}
+
+@keyframes bubbleRise {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(-300px) translateX(20px); opacity: 0; }
+}
+
+/* Desert Dust */
+#detail-view[data-biome="desert"] .biome-particles::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: rgba(253, 186, 116, 0.5);
+    box-shadow:
+        10vw -10vh 0 1px rgba(253, 186, 116, 0.4),
+        20vw 20vh 0 2px rgba(253, 186, 116, 0.3),
+        40vw -30vh 0 1px rgba(253, 186, 116, 0.6),
+        60vw 10vh 0 3px rgba(253, 186, 116, 0.2),
+        80vw -20vh 0 1px rgba(253, 186, 116, 0.5);
+    animation: dustDrift 12s linear infinite;
+}
+
+@keyframes dustDrift {
+    0% { transform: translateX(-20vw) translateY(0); opacity: 0; }
+    30% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: translateX(100vw) translateY(-5vh); opacity: 0; }
+}
+
+/* Forest Motes/Leaves */
+#detail-view[data-biome="forest"] .biome-particles::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    width: 8px;
+    height: 4px;
+    border-radius: 2px 8px;
+    background: rgba(134, 239, 172, 0.3);
+    box-shadow:
+        15vw 0 0 0 rgba(134, 239, 172, 0.4),
+        35vw 0 0 0 rgba(134, 239, 172, 0.2),
+        65vw 0 0 0 rgba(134, 239, 172, 0.5),
+        85vw 0 0 0 rgba(134, 239, 172, 0.3);
+    animation: leafFall 10s ease-in-out infinite;
+    transform-origin: center;
+}
+
+@keyframes leafFall {
+    0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(300px) translateX(50px) rotate(180deg); opacity: 0; }
+}
+
 #detail-view[data-biome="coastal"] .detail-hero::before {
     content: '';
     position: absolute;
@@ -658,6 +804,18 @@ body::after {
     border-radius: var(--radius-sm);
     letter-spacing: 0.05em;
     border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.detail-weather {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-main);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-surface-border);
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .detail-coords {

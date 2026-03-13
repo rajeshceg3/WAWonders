@@ -13,7 +13,8 @@ const mockMap = {
     once: jest.fn((event, cb) => cb()), // Immediately trigger callback
     zoomControl: { setPosition: jest.fn() },
     getCenter: jest.fn(() => ({ lat: -25, lng: 122 })),
-    removeLayer: jest.fn()
+    removeLayer: jest.fn(),
+    hasLayer: jest.fn(() => false)
 };
 
 const mockMarker = {
@@ -90,11 +91,16 @@ describe('WAWondersApp Logic', () => {
                 <svg class="audio-icon-muted"></svg>
                 <svg class="audio-icon-unmuted"></svg>
             </button>
+            <button id="theme-toggle">
+                <svg class="theme-icon-light"></svg>
+                <svg class="theme-icon-dark"></svg>
+            </button>
             <div id="info-drawer">
                 <div class="drawer-header"></div>
                 <div class="drawer-handle"></div>
                 <div id="views-container">
                     <div id="location-list-container">
+                        <input type="text" id="location-search" />
                         <ul id="location-list"></ul>
                     </div>
                     <div id="detail-view"></div>
@@ -106,6 +112,65 @@ describe('WAWondersApp Logic', () => {
 
         jest.clearAllMocks();
         app = new WAWondersApp(mockMap, locations);
+
+        // Ensure DOM elements are bound since we added them after the original init tests were written
+        app.themeToggleBtn = document.getElementById('theme-toggle');
+        app.searchInput = document.getElementById('location-search');
+    });
+
+    test('theme toggle click should toggle light and dark modes', () => {
+        app.init();
+        const themeBtn = document.getElementById('theme-toggle');
+        const darkIcon = themeBtn.querySelector('.theme-icon-dark');
+        const lightIcon = themeBtn.querySelector('.theme-icon-light');
+
+        // Mock tile layer
+        app.tileLayer = { setUrl: jest.fn() };
+
+        // Default is dark mode (assumed without explicit data-theme)
+        // Click to toggle to light mode
+        themeBtn.click();
+        expect(document.body.dataset.theme).toBe('light');
+        expect(darkIcon.style.display).toBe('none');
+        expect(lightIcon.style.display).toBe('block');
+        expect(app.tileLayer.setUrl).toHaveBeenCalledWith(expect.stringContaining('light_all'));
+
+        // Click to toggle back to dark mode
+        themeBtn.click();
+        expect(document.body.dataset.theme).toBe('dark');
+        expect(darkIcon.style.display).toBe('block');
+        expect(lightIcon.style.display).toBe('none');
+        expect(app.tileLayer.setUrl).toHaveBeenCalledWith(expect.stringContaining('dark_all'));
+    });
+
+    test('search input should filter locations', () => {
+        // Add multiple locations for search
+        const multiLocations = [
+            { id: '1', name: 'Desert Oasis', coords: [0, 0] },
+            { id: '2', name: 'Coastal Reef', coords: [1, 1] }
+        ];
+        app = new WAWondersApp(mockMap, multiLocations);
+        app.themeToggleBtn = document.getElementById('theme-toggle');
+        app.searchInput = document.getElementById('location-search');
+        app.init();
+
+        const searchInput = document.getElementById('location-search');
+        const listItems = document.querySelectorAll('#location-list li');
+
+        // Initial state: both visible
+        expect(listItems[0].style.display).not.toBe('none');
+        expect(listItems[1].style.display).not.toBe('none');
+
+        // Type "desert"
+        app.filterLocations('desert');
+        expect(listItems[0].style.display).toBe('flex'); // matches
+        expect(listItems[1].style.display).toBe('none'); // hidden
+        expect(mockMap.removeLayer).toHaveBeenCalled();
+
+        // Type "reef"
+        app.filterLocations('reef');
+        expect(listItems[0].style.display).toBe('none');
+        expect(listItems[1].style.display).toBe('flex');
     });
 
     test('init should populate location list and add markers', () => {
@@ -163,42 +228,26 @@ describe('WAWondersApp Logic', () => {
         expect(app.drawer.classList.contains('active')).toBe(false);
     });
 
-    test('selectLocation should update state and fly map', () => {
+    test('selectLocation should update state, fly map, and render mock weather', () => {
         app.init();
+        jest.useFakeTimers();
         app.selectLocation('1');
 
         expect(mockMap.flyTo).toHaveBeenCalledWith([0, 0], 10, expect.any(Object));
-        // detail-view logic involves timers now, but the initial call sets content and logic starts transition
-        // Since we are mocking timers, we might need jest.useFakeTimers() if we want to test exact display state immediately
-        // However, showDetailView sets display:block inside a timeout?
-        // Wait, my implementation:
-        // this.detailView.style.display = 'block' is inside setTimeout(..., 300) in showDetailView?
-        // No.
-        /*
-        this.detailView.appendChild(heroDiv);
-        this.detailView.appendChild(contentDiv);
 
-        // Transition Logic: List Out -> Detail In
-        this.locationListContainer.style.opacity = '0';
-
-        setTimeout(() => {
-            this.locationListContainer.style.display = 'none';
-            this.detailView.style.display = 'block';
-            ...
-        }, 300);
-        */
-        // So display:block is DELAYED.
-
-        // I need to use fake timers to test this properly.
-        jest.useFakeTimers();
-        app.selectLocation('1');
         jest.runAllTimers();
 
         expect(document.getElementById('detail-view').style.display).toBe('block');
         expect(document.getElementById('location-list-container').style.display).toBe('none');
 
+        // Check for mock weather integration
+        const detailHtml = document.getElementById('detail-view').innerHTML;
+        // The default biome without specific tags is 'desert' by default based on getBiomeFallback
+        expect(detailHtml).toContain('☀️ 35°C');
+
         jest.useRealTimers();
     });
+
 
     test('closeDrawer should reset view', () => {
         jest.useFakeTimers();

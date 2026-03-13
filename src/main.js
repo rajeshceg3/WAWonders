@@ -8,11 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start slightly zoomed out for cinematic entrance
     const map = L.map('map', { center: [-25.27, 122.5], zoom: 4, zoomControl: true, attributionControl: false });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
+    const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
     map.zoomControl.setPosition('bottomright');
 
     // Initialize app
-    const app = new WAWondersApp(map, locations);
+    const app = new WAWondersApp(map, locations, tileLayer);
     app.init();
 
     // Cinematic entrance animation

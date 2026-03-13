@@ -1,9 +1,10 @@
 import { SoundManager } from './audio.js';
 
 export class WAWondersApp {
-    constructor(mapInstance, locations) {
+    constructor(mapInstance, locations, tileLayer) {
         this.map = mapInstance;
         this.locations = locations;
+        this.tileLayer = tileLayer;
         this.markers = {};
         this.isAnimating = false;
         this.soundManager = new SoundManager();
@@ -17,6 +18,8 @@ export class WAWondersApp {
         this.closeButton = document.getElementById('close-drawer');
         this.audioToggleBtn = document.getElementById('audio-toggle');
         this.coordTracker = document.getElementById('coordinate-tracker');
+        this.searchInput = document.getElementById('location-search');
+        this.themeToggleBtn = document.getElementById('theme-toggle');
 
         this.parallaxMoveHandler = null;
         this.parallaxLeaveHandler = null;
@@ -54,6 +57,32 @@ export class WAWondersApp {
                 }
             });
             this.audioToggleBtn.addEventListener('mouseenter', () => this.soundManager.playHoverSound());
+        }
+
+        if (this.themeToggleBtn) {
+            this.themeToggleBtn.addEventListener('click', () => {
+                const isLight = document.body.dataset.theme === 'light';
+                const darkIcon = this.themeToggleBtn.querySelector('.theme-icon-dark');
+                const lightIcon = this.themeToggleBtn.querySelector('.theme-icon-light');
+
+                if (isLight) {
+                    document.body.dataset.theme = 'dark';
+                    darkIcon.style.display = 'block';
+                    lightIcon.style.display = 'none';
+                    if (this.tileLayer) {
+                        this.tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+                    }
+                } else {
+                    document.body.dataset.theme = 'light';
+                    darkIcon.style.display = 'none';
+                    lightIcon.style.display = 'block';
+                    if (this.tileLayer) {
+                        this.tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
+                    }
+                }
+                this.soundManager.playClickSound();
+            });
+            this.themeToggleBtn.addEventListener('mouseenter', () => this.soundManager.playHoverSound());
         }
 
         if (this.closeButton) {
@@ -94,6 +123,12 @@ export class WAWondersApp {
                         this.coordTracker.classList.add('active');
                     }
                 }
+            });
+        }
+
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', (e) => {
+                this.filterLocations(e.target.value);
             });
         }
 
@@ -260,6 +295,32 @@ export class WAWondersApp {
         });
     }
 
+    filterLocations(query) {
+        const lowerQuery = query.toLowerCase();
+        const listItems = Array.from(this.locationList.children);
+
+        listItems.forEach(li => {
+            const locationName = li.querySelector('span').textContent.toLowerCase();
+            if (locationName.includes(lowerQuery)) {
+                li.style.display = 'flex';
+                // Show marker
+                const id = li.dataset.id;
+                if (this.markers[id] && this.map) {
+                    if (!this.map.hasLayer(this.markers[id])) {
+                        this.markers[id].addTo(this.map);
+                    }
+                }
+            } else {
+                li.style.display = 'none';
+                // Hide marker
+                const id = li.dataset.id;
+                if (this.markers[id] && this.map) {
+                    this.map.removeLayer(this.markers[id]);
+                }
+            }
+        });
+    }
+
     setHighlight(id, isHighlighted) {
         // Highlight Marker
         const marker = this.markers[id];
@@ -376,6 +437,11 @@ export class WAWondersApp {
         img.loading = 'lazy';
         heroDiv.appendChild(img);
 
+        // Particles
+        const particlesDiv = document.createElement('div');
+        particlesDiv.className = 'biome-particles';
+        heroDiv.appendChild(particlesDiv);
+
         // Content
         const contentDiv = document.createElement('div');
         contentDiv.className = 'detail-content';
@@ -397,7 +463,13 @@ export class WAWondersApp {
         metaDiv.className = 'detail-meta';
         const formattedLat = location.coords[0].toFixed(4);
         const formattedLng = location.coords[1].toFixed(4);
-        metaDiv.innerHTML = `<span class="biome-tag">${biome.toUpperCase()}</span><span class="detail-coords">${formattedLat}, ${formattedLng}</span>`;
+
+        let weatherStr = '☁️ 22°C';
+        if (biome === 'desert') weatherStr = '☀️ 35°C';
+        else if (biome === 'coastal') weatherStr = '🌬️ 24°C';
+        else if (biome === 'forest') weatherStr = '🌦️ 18°C';
+
+        metaDiv.innerHTML = `<span class="biome-tag">${biome.toUpperCase()}</span><span class="detail-weather">${weatherStr}</span><span class="detail-coords">${formattedLat}, ${formattedLng}</span>`;
 
         const p = document.createElement('p');
         p.textContent = location.description;

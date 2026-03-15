@@ -389,4 +389,147 @@ describe('WAWondersApp Logic', () => {
         jest.useRealTimers();
     });
 
+    describe('Auto Tour Logic', () => {
+        let originalInnerWidth;
+
+        beforeEach(() => {
+            jest.useFakeTimers();
+            originalInnerWidth = window.innerWidth;
+
+            // Re-setup DOM for particles
+            const particlesOverlay = document.createElement('div');
+            particlesOverlay.id = 'particles-overlay';
+            document.body.appendChild(particlesOverlay);
+
+            app.init();
+            app.stopAutoTour();
+            clearTimeout(app.idleTimeout);
+        });
+
+        afterEach(() => {
+            window.innerWidth = originalInnerWidth;
+            app.stopAutoTour(); // Make sure intervals are cleared
+            jest.useRealTimers();
+            const particlesOverlay = document.getElementById('particles-overlay');
+            if (particlesOverlay) particlesOverlay.remove();
+
+            const cinematicTitle = document.getElementById('cinematic-title');
+            if (cinematicTitle) cinematicTitle.remove();
+
+            document.body.removeAttribute('data-biome');
+        });
+
+        test('setupAutoTour should start tour after 30 seconds of idle time', () => {
+            // Provide locations so playNextTourLocation doesn't throw when timer hits
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' }
+            ];
+
+            app.setupAutoTour();
+            expect(app.isAutoTourActive).toBe(false);
+
+            // Fast forward 29 seconds
+            jest.advanceTimersByTime(29000);
+            expect(app.isAutoTourActive).toBe(false);
+
+            // Fast forward 1 more second
+            jest.advanceTimersByTime(1000);
+            expect(app.isAutoTourActive).toBe(true);
+        });
+
+        test('user interactions should reset idle timer', () => {
+            // Provide full location objects since the logic depends on description
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.', imageUrl: '' }
+            ];
+
+            app.setupAutoTour();
+
+            // Fast forward 15 seconds
+            jest.advanceTimersByTime(15000);
+
+            // Simulate mouse move
+            window.dispatchEvent(new Event('mousemove'));
+
+            // Fast forward another 20 seconds (total 35)
+            jest.advanceTimersByTime(20000);
+
+            // Tour should NOT be active yet because timer was reset
+            expect(app.isAutoTourActive).toBe(false);
+
+            // Fast forward another 10 seconds (total 45, 30 since reset)
+            jest.advanceTimersByTime(10000);
+            expect(app.isAutoTourActive).toBe(true);
+        });
+
+        test('startAutoTour should hide UI and show cinematic title', () => {
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' }
+            ];
+            app.startAutoTour();
+
+            expect(app.drawer.classList.contains('hidden-for-tour')).toBe(true);
+            expect(app.drawer.classList.contains('active')).toBe(false);
+
+            const cinematicTitle = document.getElementById('cinematic-title');
+            expect(cinematicTitle).toBeTruthy();
+            expect(cinematicTitle.classList.contains('active')).toBe(true);
+        });
+
+        test('playNextTourLocation should fly to next location and set biome', () => {
+            // Need locations to test this properly
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' },
+                { id: 'loc2', name: 'Desert', coords: [2, 2], description: 'A sandy desert.' }
+            ];
+
+            app.isAutoTourActive = true;
+            app.playNextTourLocation();
+
+            expect(mockMap.flyTo).toHaveBeenCalledWith([1, 1], 8, expect.any(Object));
+            expect(document.body.getAttribute('data-biome')).toBe('coastal');
+
+            // Advance 8 seconds to trigger next location
+            jest.advanceTimersByTime(8000);
+
+            expect(mockMap.flyTo).toHaveBeenCalledWith([2, 2], 8, expect.any(Object));
+            expect(document.body.getAttribute('data-biome')).toBe('desert');
+        });
+
+        test('stopAutoTour should restore UI and clean up intervals', () => {
+            app.startAutoTour();
+            expect(app.isAutoTourActive).toBe(true);
+
+            app.stopAutoTour();
+
+            expect(app.isAutoTourActive).toBe(false);
+            expect(app.drawer.classList.contains('hidden-for-tour')).toBe(false);
+
+            const cinematicTitle = document.getElementById('cinematic-title');
+            expect(cinematicTitle.classList.contains('active')).toBe(false);
+
+            expect(document.body.hasAttribute('data-biome')).toBe(false);
+        });
+
+        test('updateParticles should create correct number of particles for biomes', () => {
+            const particlesOverlay = document.getElementById('particles-overlay');
+
+            app.updateParticles('coastal');
+            expect(particlesOverlay.classList.contains('particles-coastal')).toBe(true);
+            expect(particlesOverlay.querySelectorAll('.particle').length).toBe(30);
+
+            app.updateParticles('forest');
+            expect(particlesOverlay.classList.contains('particles-forest')).toBe(true);
+            expect(particlesOverlay.querySelectorAll('.particle').length).toBe(25);
+
+            app.updateParticles('desert');
+            expect(particlesOverlay.classList.contains('particles-desert')).toBe(true);
+            expect(particlesOverlay.querySelectorAll('.particle').length).toBe(40);
+
+            app.updateParticles(null);
+            expect(particlesOverlay.className).toBe('');
+            expect(particlesOverlay.querySelectorAll('.particle').length).toBe(0);
+        });
+    });
+
 });

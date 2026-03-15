@@ -222,8 +222,9 @@ export class WAWondersApp {
     playNextTourLocation() {
         if (!this.isAutoTourActive) return;
 
-        if (this.locations.length === 0) return;
+        if (!this.locations || this.locations.length === 0) return;
         const loc = this.locations[this.tourIndex];
+        if (!loc || !loc.description) return;
 
         // Fly to location
         if (this.map) {

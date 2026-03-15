@@ -7,6 +7,7 @@ export class SoundManager {
         this.ambientGain = null;
         this.currentBiome = null;
         this.noiseNode = null;
+        this.pannerNode = null;
     }
 
     init() {
@@ -18,6 +19,12 @@ export class SoundManager {
 
             this.masterGain = this.ctx.createGain();
             this.masterGain.connect(this.ctx.destination);
+
+            // Add spatial audio support if available
+            if (this.ctx.createStereoPanner) {
+                this.pannerNode = this.ctx.createStereoPanner();
+                this.pannerNode.connect(this.masterGain);
+            }
 
             this.ambientGain = this.ctx.createGain();
             this.ambientGain.connect(this.masterGain);
@@ -53,8 +60,18 @@ export class SoundManager {
         }
     }
 
-    playHoverSound() {
+    setPan(x) {
+        if (this.pannerNode) {
+            // Clamping x to [-1, 1] range to avoid pan errors
+            const panValue = Math.max(-1, Math.min(1, x));
+            this.pannerNode.pan.setTargetAtTime(panValue, this.ctx.currentTime, 0.1);
+        }
+    }
+
+    playHoverSound(x = 0) {
         if (this.isMuted || !this.ctx) return;
+
+        this.setPan(x);
 
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
@@ -69,7 +86,12 @@ export class SoundManager {
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
 
         osc.connect(gain);
-        gain.connect(this.masterGain);
+        // Connect to spatial audio panner if it exists
+        if (this.pannerNode) {
+            gain.connect(this.pannerNode);
+        } else {
+            gain.connect(this.masterGain);
+        }
 
         osc.start(t);
         osc.stop(t + 0.1);

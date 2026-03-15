@@ -252,13 +252,18 @@ describe('WAWondersApp Logic', () => {
     test('closeDrawer should reset view', () => {
         jest.useFakeTimers();
         app.init();
+        // Stop auto tour to prevent infinite timers
+        app.stopAutoTour();
+        clearTimeout(app.idleTimeout);
+
         app.selectLocation('1');
-        jest.runAllTimers(); // finish open animation
+        jest.advanceTimersByTime(2000); // Only advance enough for animations
+        window.innerWidth = 1000;
 
         app.closeDrawer();
         expect(document.getElementById('info-drawer').classList.contains('active')).toBe(false);
 
-        jest.runAllTimers(); // finish close/reset animation
+        jest.advanceTimersByTime(2000); // Only advance enough for animations
 
         expect(document.getElementById('detail-view').style.display).toBe('none');
         expect(document.getElementById('location-list-container').style.display).toBe('block');
@@ -304,4 +309,84 @@ describe('WAWondersApp Logic', () => {
         btn.dispatchEvent(mouseleave);
         expect(btn.style.transform).toBe('');
     });
+
+
+    test('parallax hover effect should apply properties to hero', () => {
+        jest.useFakeTimers();
+        app.init();
+        app.stopAutoTour();
+        clearTimeout(app.idleTimeout);
+
+        app.selectLocation('1');
+        jest.advanceTimersByTime(2000);
+        window.innerWidth = 1000;
+
+
+        // The hero is added after selection
+        const detailView = document.getElementById('detail-view');
+        const hero = detailView.querySelector('.detail-hero');
+
+        // Mock getBoundingClientRect
+        hero.getBoundingClientRect = jest.fn(() => ({
+            left: 100,
+            top: 100,
+            width: 200,
+            height: 200
+        }));
+
+        // Trigger mousemove on detailView
+        const mousemove = new MouseEvent('mousemove', {
+            clientX: 250, // center + 50 -> +0.5 x
+            clientY: 250  // center + 50 -> +0.5 y
+        });
+        detailView.dispatchEvent(mousemove);
+
+        expect(hero.style.getPropertyValue('--hero-x')).toBe('0.5');
+        expect(hero.style.getPropertyValue('--hero-y')).toBe('0.5');
+
+        // Trigger mouseleave
+        const mouseleave = new MouseEvent('mouseleave');
+        detailView.dispatchEvent(mouseleave);
+
+        expect(hero.style.getPropertyValue('--hero-x')).toBe('0');
+        expect(hero.style.getPropertyValue('--hero-y')).toBe('0');
+    });
+
+    test('mobile init handles mobile-specific touch logic correctly', () => {
+        // Simple test for the handle code
+        window.innerWidth = 500;
+        app.init();
+        const handle = document.querySelector('.drawer-handle');
+
+        const tsEvent = new Event('touchstart');
+        tsEvent.touches = [{ clientY: 100 }];
+        handle.dispatchEvent(tsEvent);
+
+        const tmEvent = new Event('touchmove');
+        tmEvent.touches = [{ clientY: 150 }];
+        handle.dispatchEvent(tmEvent);
+
+        // check inline style
+        expect(app.drawer.style.transform).toBe('translateY(50px)');
+
+        const teEvent = new Event('touchend');
+        handle.dispatchEvent(teEvent);
+        // Did not move far enough, so transform cleared, but not closed
+        expect(app.drawer.style.transform).toBe('');
+    });
+
+    test('drawing flight path and back', () => {
+        app.init();
+        const start = { lat: 0, lng: 0 };
+        const end = { lat: 10, lng: 10 };
+        app.drawFlightPath(start, end);
+        expect(mockL.polyline).toHaveBeenCalled();
+
+        jest.useFakeTimers();
+        app.showListView();
+        jest.runAllTimers();
+        expect(document.getElementById('detail-view').style.display).toBe('none');
+        jest.useRealTimers();
+    });
+
 });

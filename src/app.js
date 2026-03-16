@@ -148,6 +148,193 @@ export class WAWondersApp {
             // Mobile Swipe-down to Close Gestures
             this.initMobileGestures();
         }
+
+        // Setup Auto Tour
+        this.setupAutoTour();
+    }
+
+    setupAutoTour() {
+        this.idleTimeout = null;
+        this.isAutoTourActive = false;
+        this.autoTourInterval = null;
+        this.tourIndex = 0;
+
+        const resetIdleTimer = () => {
+            if (this.isAutoTourActive) {
+                this.stopAutoTour();
+            }
+            clearTimeout(this.idleTimeout);
+            this.idleTimeout = setTimeout(() => this.startAutoTour(), 30000); // 30 seconds
+        };
+
+        // Listen for user interactions to reset the timer
+        ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+            window.addEventListener(evt, resetIdleTimer, { passive: true });
+        });
+
+        // Initial timer start
+        resetIdleTimer();
+    }
+
+    startAutoTour() {
+        if (this.isAutoTourActive) return;
+        this.isAutoTourActive = true;
+
+        // Hide UI
+        if (this.drawer) {
+            this.drawer.classList.remove('active');
+            this.drawer.classList.add('hidden-for-tour');
+            // Hide inner elements aggressively
+            if (this.detailView) this.detailView.classList.add('hidden-for-tour');
+            if (this.locationListContainer) this.locationListContainer.classList.add('hidden-for-tour');
+        }
+
+        const topControls = document.querySelector('.top-controls');
+        if (topControls) topControls.classList.add('hidden-for-tour');
+
+        const coordTracker = document.getElementById('coordinate-tracker');
+        if (coordTracker) coordTracker.classList.add('hidden-for-tour');
+
+        // Close detail view if open
+        if (this.detailView && this.detailView.classList.contains('visible')) {
+            this.detailView.classList.remove('visible');
+            this.detailView.style.display = 'none';
+        }
+
+        // Ensure no active markers/list items remain selected
+        this.updateActiveStates(null);
+
+        let cinematicTitle = document.getElementById('cinematic-title');
+        if (!cinematicTitle) {
+            cinematicTitle = document.createElement('div');
+            cinematicTitle.id = 'cinematic-title';
+            cinematicTitle.innerHTML = '<h1>Western Australia</h1><p>Cinematic Tour</p>';
+            document.body.appendChild(cinematicTitle);
+        }
+        // Force reflow
+        void cinematicTitle.offsetWidth;
+        cinematicTitle.classList.add('active');
+
+        this.tourIndex = 0;
+        this.playNextTourLocation();
+    }
+
+    playNextTourLocation() {
+        if (!this.isAutoTourActive) return;
+
+        if (!this.locations || this.locations.length === 0) return;
+        const loc = this.locations[this.tourIndex];
+        if (!loc || !loc.description) return;
+
+        // Fly to location
+        if (this.map) {
+             this.map.flyTo(loc.coords, 8, { animate: true, duration: 4 });
+        }
+
+        // Update biome logic
+        let biome = 'desert';
+        const desc = loc.description.toLowerCase();
+        if (desc.includes('reef') || desc.includes('beach') || desc.includes('ocean') || desc.includes('water') || desc.includes('bay')) {
+            biome = 'coastal';
+        } else if (desc.includes('forest') || desc.includes('park') || desc.includes('tree')) {
+            biome = 'forest';
+        }
+        document.body.setAttribute('data-biome', biome);
+        this.updateParticles(biome);
+
+        // We only highlight the marker during auto tour, no list selection or line drawing since UI is hidden.
+        for (const id in this.markers) {
+            if (this.markers[id]._icon) {
+                 this.markers[id]._icon.classList.toggle('active', id === loc.id);
+                 if (id !== loc.id) {
+                     this.markers[id].setZIndexOffset(0);
+                 } else {
+                     this.markers[id].setZIndexOffset(1000);
+                 }
+            }
+        }
+
+        this.tourIndex = (this.tourIndex + 1) % this.locations.length;
+        this.autoTourInterval = setTimeout(() => this.playNextTourLocation(), 8000); // Move every 8 seconds
+    }
+
+    updateParticles(biome) {
+        const particlesOverlay = document.getElementById('particles-overlay');
+        if (!particlesOverlay) return;
+
+        // Clear existing particles
+        particlesOverlay.innerHTML = '';
+        particlesOverlay.className = '';
+
+        if (!biome) return;
+
+        particlesOverlay.classList.add(`particles-${biome}`);
+
+        let numParticles = 20;
+        if (biome === 'coastal') numParticles = 30; // Bubbles
+        else if (biome === 'forest') numParticles = 25; // Leaves
+        else if (biome === 'desert') numParticles = 40; // Dust
+
+        for (let i = 0; i < numParticles; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+
+            // Random properties
+            const left = Math.random() * 100; // 0 to 100vw
+            const animDuration = 5 + Math.random() * 10; // 5 to 15s
+            const delay = Math.random() * -10; // Negative delay so some start already visible
+            const size = 0.5 + Math.random() * 2; // Size multiplier
+
+            p.style.left = `${left}vw`;
+            p.style.animationDuration = `${animDuration}s`;
+            p.style.animationDelay = `${delay}s`;
+            p.style.transform = `scale(${size})`;
+
+            particlesOverlay.appendChild(p);
+        }
+    }
+
+    stopAutoTour() {
+        if (!this.isAutoTourActive) return;
+        this.isAutoTourActive = false;
+        clearTimeout(this.autoTourInterval);
+
+        // Show UI
+        if (this.drawer) {
+            this.drawer.classList.remove('hidden-for-tour');
+            if (this.detailView) this.detailView.classList.remove('hidden-for-tour');
+            if (this.locationListContainer) this.locationListContainer.classList.remove('hidden-for-tour');
+            this.drawer.classList.add('active');
+        }
+
+        const topControls = document.querySelector('.top-controls');
+        if (topControls) topControls.classList.remove('hidden-for-tour');
+
+        const coordTracker = document.getElementById('coordinate-tracker');
+        if (coordTracker) coordTracker.classList.remove('hidden-for-tour');
+
+        const cinematicTitle = document.getElementById('cinematic-title');
+        if (cinematicTitle) {
+            cinematicTitle.classList.remove('active');
+        }
+
+        // Reset biome to default since no detail view is technically open
+        document.body.removeAttribute('data-biome');
+        this.updateParticles(null);
+
+        // Reset markers
+        this.updateActiveStates(null);
+
+        // Ensure list view is visible
+        if (this.locationListContainer) {
+            this.locationListContainer.style.display = 'block';
+            this.locationListContainer.classList.remove('slide-out-left');
+        }
+
+        // Fly back to overview
+        if (this.map) {
+            this.map.flyTo([-25.27, 122.5], 5, { animate: true, duration: 1.5 });
+        }
     }
 
     initMobileGestures() {
@@ -265,8 +452,10 @@ export class WAWondersApp {
             }
         });        // Bi-directional Highlighting
         // 1. Hover List Item -> Highlight Marker
-        li.addEventListener('mouseenter', () => {
-            this.soundManager.playHoverSound();
+        li.addEventListener('mouseenter', (e) => {
+            // Calculate pan value based on mouse X relative to window width
+            const panValue = (e.clientX / window.innerWidth) * 2 - 1;
+            this.soundManager.playHoverSound(panValue);
             this.setHighlight(location.id, true);
         });
         li.addEventListener('mousemove', (e) => {
@@ -406,6 +595,7 @@ export class WAWondersApp {
 
         this.showDetailView(location, biome);
         document.body.setAttribute('data-biome', biome);
+        this.updateParticles(biome);
         this.updateActiveStates(id);
 
         if (this.drawer) {
@@ -545,6 +735,7 @@ export class WAWondersApp {
         setTimeout(() => {
             // Once transition finishes, hide detail
             this.detailView.style.display = 'none';
+            this.updateParticles(null);
             this.updateActiveStates(null);
         }, 400); // Matches CSS transition time
 

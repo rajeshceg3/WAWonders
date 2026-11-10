@@ -133,14 +133,14 @@ describe('WAWondersApp Logic', () => {
         expect(document.body.dataset.theme).toBe('light');
         expect(darkIcon.style.display).toBe('none');
         expect(lightIcon.style.display).toBe('block');
-        expect(app.tileLayer.setUrl).toHaveBeenCalledWith(expect.stringContaining('light_all'));
+        expect(app.tileLayer.setUrl).not.toHaveBeenCalled();
 
         // Click to toggle back to dark mode
         themeBtn.click();
         expect(document.body.dataset.theme).toBe('dark');
         expect(darkIcon.style.display).toBe('block');
         expect(lightIcon.style.display).toBe('none');
-        expect(app.tileLayer.setUrl).toHaveBeenCalledWith(expect.stringContaining('dark_all'));
+        expect(app.tileLayer.setUrl).not.toHaveBeenCalled();
     });
 
     test('search input should filter locations', () => {
@@ -228,7 +228,7 @@ describe('WAWondersApp Logic', () => {
         expect(app.drawer.classList.contains('active')).toBe(false);
     });
 
-    test('selectLocation should update state, fly map, and render mock weather', () => {
+    test('selectLocation should update state and fly map without fabricated weather', () => {
         app.init();
         jest.useFakeTimers();
         app.selectLocation('1');
@@ -243,7 +243,8 @@ describe('WAWondersApp Logic', () => {
         // Check for mock weather integration
         const detailHtml = document.getElementById('detail-view').innerHTML;
         // The default biome without specific tags is 'desert' by default based on getBiomeFallback
-        expect(detailHtml).toContain('☀️ 35°C');
+        expect(detailHtml).not.toContain('°C');
+        expect(detailHtml).toContain('not live access information');
 
         jest.useRealTimers();
     });
@@ -419,7 +420,7 @@ describe('WAWondersApp Logic', () => {
             document.body.removeAttribute('data-biome');
         });
 
-        test('setupAutoTour should start tour after 30 seconds of idle time', () => {
+        test('setupAutoTour keeps idle reading still until explicit start', () => {
             // Provide locations so playNextTourLocation doesn't throw when timer hits
             app.locations = [
                 { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' }
@@ -434,10 +435,10 @@ describe('WAWondersApp Logic', () => {
 
             // Fast forward 1 more second
             jest.advanceTimersByTime(1000);
-            expect(app.isAutoTourActive).toBe(true);
+            expect(app.isAutoTourActive).toBe(false);
         });
 
-        test('user interactions should reset idle timer', () => {
+        test('user interactions do not schedule an unrequested tour', () => {
             // Provide full location objects since the logic depends on description
             app.locations = [
                 { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.', imageUrl: '' }
@@ -459,7 +460,7 @@ describe('WAWondersApp Logic', () => {
 
             // Fast forward another 10 seconds (total 45, 30 since reset)
             jest.advanceTimersByTime(10000);
-            expect(app.isAutoTourActive).toBe(true);
+            expect(app.isAutoTourActive).toBe(false);
         });
 
         test('startAutoTour should hide UI and show cinematic title', () => {

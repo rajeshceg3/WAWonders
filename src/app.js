@@ -9,6 +9,7 @@ export class WAWondersApp {
         this.isAnimating = false;
         this.soundManager = new SoundManager();
         this.currentFlightPath = null;
+        this.reducedMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
         // Bind DOM elements
         this.drawer = document.getElementById('info-drawer');
@@ -41,6 +42,8 @@ export class WAWondersApp {
         if (this.audioToggleBtn) {
             this.audioToggleBtn.addEventListener('click', () => {
                 const isMuted = this.soundManager.toggleMute();
+                this.audioToggleBtn.setAttribute('aria-pressed',String(!isMuted));
+                this.audioToggleBtn.setAttribute('aria-label',isMuted?'Turn audio on':'Turn audio off');
                 this.soundManager.playClickSound(); // Play sound if we just unmuted
 
                 const mutedIcon = this.audioToggleBtn.querySelector('.audio-icon-muted');
@@ -70,14 +73,14 @@ export class WAWondersApp {
                     darkIcon.style.display = 'block';
                     lightIcon.style.display = 'none';
                     if (this.tileLayer) {
-                        this.tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+                        // The map retains its readable, attributed standard tiles.
                     }
                 } else {
                     document.body.dataset.theme = 'light';
                     darkIcon.style.display = 'none';
                     lightIcon.style.display = 'block';
                     if (this.tileLayer) {
-                        this.tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
+                        // UI theme does not change the map service.
                     }
                 }
                 this.soundManager.playClickSound();
@@ -134,7 +137,7 @@ export class WAWondersApp {
 
         // Initially open drawer
         if (this.drawer) {
-            setTimeout(() => this.drawer.classList.add('active'), 500);
+            this.drawer.classList.add('active');
 
             // Mouse tracking for CSS spotlight effect
             this.drawer.addEventListener('mousemove', (e) => {
@@ -156,29 +159,17 @@ export class WAWondersApp {
     setupAutoTour() {
         this.idleTimeout = null;
         this.isAutoTourActive = false;
+        const tourButton=document.querySelector('#tour-toggle');if(tourButton)tourButton.textContent='Start tour';
         this.autoTourInterval = null;
         this.tourIndex = 0;
 
-        const resetIdleTimer = () => {
-            if (this.isAutoTourActive) {
-                this.stopAutoTour();
-            }
-            clearTimeout(this.idleTimeout);
-            this.idleTimeout = setTimeout(() => this.startAutoTour(), 30000); // 30 seconds
-        };
-
-        // Listen for user interactions to reset the timer
-        ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
-            window.addEventListener(evt, resetIdleTimer, { passive: true });
-        });
-
-        // Initial timer start
-        resetIdleTimer();
+        // Tours are explicit. Idle reading never hides controls or starts movement.
     }
 
     startAutoTour() {
         if (this.isAutoTourActive) return;
         this.isAutoTourActive = true;
+        const tourButton=document.querySelector('#tour-toggle');if(tourButton)tourButton.textContent='Stop tour';
 
         // Hide UI
         if (this.drawer) {
@@ -228,7 +219,7 @@ export class WAWondersApp {
 
         // Fly to location
         if (this.map) {
-             this.map.flyTo(loc.coords, 8, { animate: true, duration: 4 });
+             this.map.flyTo(loc.coords, 8, { animate: !this.reducedMotion, duration: 4 });
         }
 
         // Update biome logic
@@ -297,6 +288,7 @@ export class WAWondersApp {
     stopAutoTour() {
         if (!this.isAutoTourActive) return;
         this.isAutoTourActive = false;
+        const tourButton=document.querySelector('#tour-toggle');if(tourButton)tourButton.textContent='Start tour';
         clearTimeout(this.autoTourInterval);
 
         // Show UI
@@ -333,7 +325,7 @@ export class WAWondersApp {
 
         // Fly back to overview
         if (this.map) {
-            this.map.flyTo([-25.27, 122.5], 5, { animate: true, duration: 1.5 });
+            if(this.overview)this.overview();else this.map.flyTo([-25.27, 122.5], 5, { animate: !this.reducedMotion, duration: 1.5 });
         }
     }
 
@@ -406,12 +398,12 @@ export class WAWondersApp {
         // Use a divIcon that we can style with CSS classes
         const markerIcon = L.divIcon({
             className: 'custom-marker',
-            html: '',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+            html: '<span>'+String(this.locations.findIndex(l=>l.id===location.id)+1)+'</span>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
         });
 
-        const marker = L.marker(location.coords, { icon: markerIcon }).addTo(this.map);
+        const marker = L.marker(location.coords, { icon: markerIcon, title:location.name,alt:location.name }).addTo(this.markerLayer || this.map);
 
         // Custom popup content
         const popupContent = `<div style="text-align:center;">${location.name}</div>`;
@@ -427,6 +419,7 @@ export class WAWondersApp {
         li.innerHTML = `<span>${location.name}</span> <span style="opacity:0.5">→</span>`;
         li.dataset.id = location.id;
         li.setAttribute('tabindex', '0');
+        li.setAttribute('role','button');
 
         // Staggered entrance animation delay based on index
         const index = this.locationList.children.length;
@@ -485,7 +478,9 @@ export class WAWondersApp {
     }
 
     filterLocations(query) {
+        this.map?.stop?.();
         const lowerQuery = query.toLowerCase();
+        const layer=this.markerLayer||this.map;
         const listItems = Array.from(this.locationList.children);
 
         listItems.forEach(li => {
@@ -495,8 +490,8 @@ export class WAWondersApp {
                 // Show marker
                 const id = li.dataset.id;
                 if (this.markers[id] && this.map) {
-                    if (!this.map.hasLayer(this.markers[id])) {
-                        this.markers[id].addTo(this.map);
+                    if (!layer.hasLayer(this.markers[id])) {
+                        this.markers[id].addTo(layer);
                     }
                 }
             } else {
@@ -504,7 +499,7 @@ export class WAWondersApp {
                 // Hide marker
                 const id = li.dataset.id;
                 if (this.markers[id] && this.map) {
-                    this.map.removeLayer(this.markers[id]);
+                    layer.removeLayer(this.markers[id]);
                 }
             }
         });
@@ -537,7 +532,7 @@ export class WAWondersApp {
     }
 
     selectLocation(id) {
-        if (this.isAnimating) return;
+        this.map?.stop?.();
         this.isAnimating = true;
 
         const location = this.locations.find(loc => loc.id === id);
@@ -556,8 +551,8 @@ export class WAWondersApp {
 
             this.drawFlightPath(startLatLng, endLatLng);
 
-            this.map.flyTo(location.coords, 10, {
-                animate: true,
+            if(this.centerPlace)this.centerPlace(location.coords);else this.map.flyTo(location.coords, 10, {
+                animate: !this.reducedMotion,
                 duration: 1.5,
                 easeLinearity: 0.25
             });
@@ -593,6 +588,7 @@ export class WAWondersApp {
         }
         this.soundManager.setBiome(biome);
 
+        this.isAnimating=false;
         this.showDetailView(location, biome);
         document.body.setAttribute('data-biome', biome);
         this.updateParticles(biome);
@@ -621,11 +617,8 @@ export class WAWondersApp {
         const heroDiv = document.createElement('div');
         heroDiv.className = 'detail-hero';
 
-        const img = document.createElement('img');
-        img.src = location.imageUrl;
-        img.alt = location.name;
-        img.loading = 'lazy';
-        heroDiv.appendChild(img);
+        // Stock photo URLs were not verified as these places.
+        heroDiv.textContent = 'WESTERN AUSTRALIA';
 
         // Particles
         const particlesDiv = document.createElement('div');
@@ -654,12 +647,7 @@ export class WAWondersApp {
         const formattedLat = location.coords[0].toFixed(4);
         const formattedLng = location.coords[1].toFixed(4);
 
-        let weatherStr = '☁️ 22°C';
-        if (biome === 'desert') weatherStr = '☀️ 35°C';
-        else if (biome === 'coastal') weatherStr = '🌬️ 24°C';
-        else if (biome === 'forest') weatherStr = '🌦️ 18°C';
-
-        metaDiv.innerHTML = `<span class="biome-tag">${biome.toUpperCase()}</span><span class="detail-weather">${weatherStr}</span><span class="detail-coords">${formattedLat}, ${formattedLng}</span>`;
+        metaDiv.innerHTML = `<span class="biome-tag">MAP LOCATION</span><span class="detail-coords">${formattedLat}, ${formattedLng}</span>`;
 
         const p = document.createElement('p');
         p.textContent = location.description;
@@ -668,6 +656,8 @@ export class WAWondersApp {
         contentDiv.appendChild(h2);
         contentDiv.appendChild(metaDiv);
         contentDiv.appendChild(p);
+        const note=document.createElement('p');note.className='planning-note';note.textContent='General guide, not live access information. Check park alerts, road conditions, entry and wildlife guidance before travel.';contentDiv.appendChild(note);
+        if(location.sourceUrl){const link=document.createElement('a');link.href=location.sourceUrl;link.target='_blank';link.rel='noopener';link.textContent='Official source';contentDiv.appendChild(link);}
 
         this.detailView.appendChild(heroDiv);
         this.detailView.appendChild(contentDiv);
@@ -702,6 +692,7 @@ export class WAWondersApp {
         // Transition Logic: List Out -> Detail In
         // Show detail view behind the scene but ready to slide in
         this.detailView.style.display = 'block';
+        this.detailView.scrollTop=0;
 
         // Force reflow to enable transition
         void this.detailView.offsetWidth;
@@ -710,10 +701,7 @@ export class WAWondersApp {
         this.locationListContainer.classList.add('slide-out-left');
         this.detailView.classList.add('visible');
 
-        setTimeout(() => {
-            // Once transition finishes, hide list for performance
-            this.locationListContainer.style.display = 'none';
-        }, 400); // Matches CSS transition time
+        this.locationListContainer.style.display = 'none';
     }
 
     showListView() {
@@ -732,18 +720,14 @@ export class WAWondersApp {
         document.body.removeAttribute('data-biome');
         this.locationListContainer.classList.remove('slide-out-left');
 
-        setTimeout(() => {
-            // Once transition finishes, hide detail
-            this.detailView.style.display = 'none';
-            this.updateParticles(null);
-            this.updateActiveStates(null);
-        }, 400); // Matches CSS transition time
+        this.detailView.style.display = 'none';
+        this.updateParticles(null);this.updateActiveStates(null);
 
         if (this.isAnimating) return;
         this.isAnimating = true;
 
         if (this.map) {
-            this.map.flyTo([-25.27, 122.5], 5, { animate: true, duration: 1.5 });
+            if(this.overview)this.overview();else this.map.flyTo([-25.27, 122.5], 5, { animate: !this.reducedMotion, duration: 1.5 });
             this.map.once('moveend', () => {
                 this.isAnimating = false;
             });

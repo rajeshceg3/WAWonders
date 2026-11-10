@@ -1,26 +1,22 @@
 import './style.css';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { locations } from './data.js';
 import { WAWondersApp } from './app.js';
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize map
-    const L = window.L; // Assume L is loaded via CDN
-
-    // Start slightly zoomed out for cinematic entrance
-    const map = L.map('map', { center: [-25.27, 122.5], zoom: 4, zoomControl: true, attributionControl: false });
-    const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
-    map.zoomControl.setPosition('bottomright');
-
-    // Initialize app
-    const app = new WAWondersApp(map, locations, tileLayer);
-    app.init();
-
-    // Cinematic entrance animation
-    setTimeout(() => {
-        map.flyTo([-25.27, 122.5], 5, {
-            animate: true,
-            duration: 2.5,
-            easeLinearity: 0.1
-        });
-    }, 100);
-});
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+window.L=L;
+await import('leaflet.markercluster');
+const start=() => {
+ const map=L.map('map',{center:[-25.27,122.5],zoom:4,zoomControl:true,zoomAnimation:false,zoomSnap:.5});
+ map.zoomControl.setPosition('bottomright');
+ const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+ const app=new WAWondersApp(map,locations,tiles);app.markerLayer=L.markerClusterGroup({animate:false,maxClusterRadius:54,showCoverageOnHover:false,disableClusteringAtZoom:10,iconCreateFunction:c=>L.divIcon({className:'guide-cluster',html:'<span>'+c.getChildCount()+'</span>',iconSize:[44,44],iconAnchor:[22,22]})}).addTo(map);
+ const offsetView=(coords,zoom)=>{const mobile=innerWidth<768;const offset=L.point(mobile?0:210,mobile?-innerHeight*.25:0);map.stop();map.setView(map.unproject(map.project(coords,zoom).subtract(offset),zoom),zoom,{animate:false});};
+ app.centerPlace=coords=>offsetView(coords,10);app.overview=()=>offsetView([-25.27,122.5],innerWidth<768?3:4.5);app.init();app.overview();
+ const status=document.querySelector('#map-status');tiles.on('tileerror',()=>{status.hidden=false;});tiles.on('tileload',()=>{status.hidden=true;});
+ document.querySelector('#browse-toggle').onclick=()=>{app.stopAutoTour();app.showListView();app.drawer.classList.add('active');app.overview();};
+ document.querySelector('#reset-map').onclick=()=>{app.stopAutoTour();app.overview();};
+ document.querySelector('#tour-toggle').onclick=()=>{if(app.isAutoTourActive)app.stopAutoTour();else app.startAutoTour();document.querySelector('#tour-toggle').textContent=app.isAutoTourActive?'Stop tour':'Start tour';};
+};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();

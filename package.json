@@ -44,7 +44,8 @@
     ]
   },
   "dependencies": {
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
@@ -56,6 +57,10 @@
     "jest-environment-jsdom": "^30.2.0",
     "playwright": "^1.57.0",
     "prettier": "^3.7.4",
+    "puppeteer-core": "^25.17.0",
     "vite": "^7.3.1"
+  },
+  "overrides": {
+    "brace-expansion": "^1.1.21"
   }
 }

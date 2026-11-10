@@ -10,7 +10,8 @@ module.exports = defineConfig({
   reporter: 'html',
   use: {
     trace: 'on-first-retry',
-    baseURL: 'http://localhost:4173', // Vite preview port
+    launchOptions:{executablePath:process.env.CHROME_PATH||undefined,args:['--no-sandbox']},
+    baseURL: process.env.BASE_URL || 'http://localhost:4173', // Vite preview port
   },
   projects: [
     {
@@ -18,7 +19,7 @@ module.exports = defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
+  webServer: process.env.BASE_URL ? undefined : {
     command: 'npm run preview',
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,

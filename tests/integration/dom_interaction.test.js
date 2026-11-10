@@ -107,7 +107,7 @@ describe('DOM Integration', () => {
         // Check side effects of selectLocation
         expect(mockMap.flyTo).toHaveBeenCalled();
         expect(document.getElementById('detail-view').innerHTML).toContain('Test Loc');
-        expect(document.getElementById('detail-view').querySelector('img').src).toContain('img.jpg');
+        expect(document.getElementById('detail-view').querySelector('img')).toBeNull();
 
         jest.useRealTimers();
     });

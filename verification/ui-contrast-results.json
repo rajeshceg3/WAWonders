@@ -1,0 +1,674 @@
+[
+ {
+  "w": 1440,
+  "ch": "dark-0",
+  "selector": "#browse-toggle",
+  "corePixels": 713,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-0",
+  "selector": "#reset-map",
+  "corePixels": 668,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-0",
+  "selector": "#tour-toggle",
+  "corePixels": 1033,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-0",
+  "selector": "#location-search",
+  "corePixels": 1106,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-0",
+  "selector": "h1",
+  "corePixels": 2973,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-0",
+  "selector": ".guide-caption",
+  "corePixels": 1708,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-0",
+  "selector": "#location-list li:first-child span:first-child",
+  "corePixels": 1197,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-1",
+  "selector": ".detail-hero",
+  "corePixels": 1350,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-1",
+  "selector": ".back-button",
+  "corePixels": 1271,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-1",
+  "selector": ".detail-content h2",
+  "corePixels": 5866,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-1",
+  "selector": ".biome-tag",
+  "corePixels": 1918,
+  "worstContrast": 8.996,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-1",
+  "selector": ".detail-coords",
+  "corePixels": 1010,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-2",
+  "selector": ".detail-content p",
+  "corePixels": 11828,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "dark-2",
+  "selector": ".planning-note",
+  "corePixels": 5664,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-0",
+  "selector": "#browse-toggle",
+  "corePixels": 703,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-0",
+  "selector": "#reset-map",
+  "corePixels": 657,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-0",
+  "selector": "#tour-toggle",
+  "corePixels": 1024,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-0",
+  "selector": "#location-search",
+  "corePixels": 1070,
+  "worstContrast": 11.198,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-0",
+  "selector": "h1",
+  "corePixels": 2923,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-0",
+  "selector": ".guide-caption",
+  "corePixels": 1629,
+  "worstContrast": 6.414,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-0",
+  "selector": "#location-list li:first-child span:first-child",
+  "corePixels": 1181,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-1",
+  "selector": ".detail-hero",
+  "corePixels": 1319,
+  "worstContrast": 5.836,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-1",
+  "selector": ".back-button",
+  "corePixels": 1254,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-1",
+  "selector": ".detail-content h2",
+  "corePixels": 5795,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-1",
+  "selector": ".biome-tag",
+  "corePixels": 1900,
+  "worstContrast": 7.201,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-1",
+  "selector": ".detail-coords",
+  "corePixels": 989,
+  "worstContrast": 6.414,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-2",
+  "selector": ".detail-content p",
+  "corePixels": 11469,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 1440,
+  "ch": "light-2",
+  "selector": ".planning-note",
+  "corePixels": 5321,
+  "worstContrast": 6.414,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-0",
+  "selector": "#browse-toggle",
+  "corePixels": 714,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-0",
+  "selector": "#reset-map",
+  "corePixels": 678,
+  "worstContrast": 12.064,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-0",
+  "selector": "#tour-toggle",
+  "corePixels": 1055,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-0",
+  "selector": "#location-search",
+  "corePixels": 1106,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-0",
+  "selector": "h1",
+  "corePixels": 2520,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-0",
+  "selector": ".guide-caption",
+  "corePixels": 1708,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-0",
+  "selector": "#location-list li:first-child span:first-child",
+  "corePixels": 1197,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-1",
+  "selector": ".detail-hero",
+  "corePixels": 1350,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-1",
+  "selector": ".back-button",
+  "corePixels": 1271,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-1",
+  "selector": ".detail-content h2",
+  "corePixels": 4497,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-1",
+  "selector": ".biome-tag",
+  "corePixels": 1918,
+  "worstContrast": 8.996,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-1",
+  "selector": ".detail-coords",
+  "corePixels": 1015,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-2",
+  "selector": ".detail-content p",
+  "corePixels": 11841,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "dark-2",
+  "selector": ".planning-note",
+  "corePixels": 3172,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-0",
+  "selector": "#browse-toggle",
+  "corePixels": 704,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-0",
+  "selector": "#reset-map",
+  "corePixels": 669,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-0",
+  "selector": "#tour-toggle",
+  "corePixels": 1005,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-0",
+  "selector": "#location-search",
+  "corePixels": 1070,
+  "worstContrast": 11.198,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-0",
+  "selector": "h1",
+  "corePixels": 2473,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-0",
+  "selector": ".guide-caption",
+  "corePixels": 1629,
+  "worstContrast": 6.414,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-0",
+  "selector": "#location-list li:first-child span:first-child",
+  "corePixels": 1181,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-1",
+  "selector": ".detail-hero",
+  "corePixels": 1319,
+  "worstContrast": 5.836,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-1",
+  "selector": ".back-button",
+  "corePixels": 1254,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-1",
+  "selector": ".detail-content h2",
+  "corePixels": 4464,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-1",
+  "selector": ".biome-tag",
+  "corePixels": 1900,
+  "worstContrast": 7.201,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-1",
+  "selector": ".detail-coords",
+  "corePixels": 987,
+  "worstContrast": 6.414,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-2",
+  "selector": ".detail-content p",
+  "corePixels": 11473,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 320,
+  "ch": "light-2",
+  "selector": ".planning-note",
+  "corePixels": 3037,
+  "worstContrast": 6.414,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-0",
+  "selector": "#browse-toggle",
+  "corePixels": 714,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-0",
+  "selector": "#reset-map",
+  "corePixels": 678,
+  "worstContrast": 12.064,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-0",
+  "selector": "#tour-toggle",
+  "corePixels": 1055,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-0",
+  "selector": "#location-search",
+  "corePixels": 1106,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-0",
+  "selector": "h1",
+  "corePixels": 2520,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-0",
+  "selector": ".guide-caption",
+  "corePixels": 1708,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-0",
+  "selector": "#location-list li:first-child span:first-child",
+  "corePixels": 1197,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-1",
+  "selector": ".detail-hero",
+  "corePixels": 1350,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-1",
+  "selector": ".back-button",
+  "corePixels": 1271,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-1",
+  "selector": ".detail-content h2",
+  "corePixels": 4497,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-1",
+  "selector": ".biome-tag",
+  "corePixels": 1918,
+  "worstContrast": 8.996,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-1",
+  "selector": ".detail-coords",
+  "corePixels": 1010,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-2",
+  "selector": ".detail-content p",
+  "corePixels": 11823,
+  "worstContrast": 12.033,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "dark-2",
+  "selector": ".planning-note",
+  "corePixels": 3004,
+  "worstContrast": 8.997,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-0",
+  "selector": "#browse-toggle",
+  "corePixels": 704,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-0",
+  "selector": "#reset-map",
+  "corePixels": 669,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-0",
+  "selector": "#tour-toggle",
+  "corePixels": 1005,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-0",
+  "selector": "#location-search",
+  "corePixels": 1070,
+  "worstContrast": 11.198,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-0",
+  "selector": "h1",
+  "corePixels": 2473,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-0",
+  "selector": ".guide-caption",
+  "corePixels": 1629,
+  "worstContrast": 6.414,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-0",
+  "selector": "#location-list li:first-child span:first-child",
+  "corePixels": 1181,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-1",
+  "selector": ".detail-hero",
+  "corePixels": 1319,
+  "worstContrast": 5.836,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-1",
+  "selector": ".back-button",
+  "corePixels": 1254,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-1",
+  "selector": ".detail-content h2",
+  "corePixels": 4464,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-1",
+  "selector": ".biome-tag",
+  "corePixels": 1900,
+  "worstContrast": 7.201,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-1",
+  "selector": ".detail-coords",
+  "corePixels": 989,
+  "worstContrast": 6.414,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-2",
+  "selector": ".detail-content p",
+  "corePixels": 11446,
+  "worstContrast": 12.291,
+  "pass": true
+ },
+ {
+  "w": 390,
+  "ch": "light-2",
+  "selector": ".planning-note",
+  "corePixels": 2868,
+  "worstContrast": 6.414,
+  "pass": true
+ }
+]

@@ -512,6 +512,94 @@ describe('WAWondersApp Logic', () => {
             expect(document.body.hasAttribute('data-biome')).toBe(false);
         });
 
+        test('tour card displays the highlighted place as it is visited', () => {
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' },
+                { id: 'loc2', name: 'Desert', coords: [2, 2], description: 'A sandy desert.' }
+            ];
+            app.startAutoTour();
+
+            expect(document.getElementById('tour-place-name').textContent).toBe('Reef');
+            expect(document.getElementById('tour-place-count').textContent).toBe('1 / 2');
+            expect(document.getElementById('tour-place-desc').textContent).toBe('A beautiful coastal reef.');
+
+            jest.advanceTimersByTime(8000);
+            expect(document.getElementById('tour-place-name').textContent).toBe('Desert');
+            expect(document.getElementById('tour-place-count').textContent).toBe('2 / 2');
+        });
+
+        test('Next steps manually, pauses auto-advance, and reveals the Auto resume button', () => {
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' },
+                { id: 'loc2', name: 'Desert', coords: [2, 2], description: 'A sandy desert.' }
+            ];
+            app.startAutoTour();
+            expect(document.getElementById('tour-auto').hidden).toBe(true);
+
+            document.getElementById('tour-next').click();
+
+            expect(document.getElementById('tour-place-name').textContent).toBe('Desert');
+            expect(document.getElementById('tour-place-count').textContent).toBe('2 / 2');
+            expect(app.tourAuto).toBe(false);
+            expect(document.getElementById('tour-auto').hidden).toBe(false);
+
+            // Auto advance is paused: no further movement without input
+            jest.advanceTimersByTime(16000);
+            expect(document.getElementById('tour-place-name').textContent).toBe('Desert');
+        });
+
+        test('Prev wraps to the last place and Auto resumes the tour from there', () => {
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' },
+                { id: 'loc2', name: 'Desert', coords: [2, 2], description: 'A sandy desert.' }
+            ];
+            app.startAutoTour();
+
+            document.getElementById('tour-prev').click();
+            expect(document.getElementById('tour-place-name').textContent).toBe('Desert');
+            expect(document.getElementById('tour-place-count').textContent).toBe('2 / 2');
+
+            document.getElementById('tour-auto').click();
+            expect(app.tourAuto).toBe(true);
+            expect(document.getElementById('tour-auto').hidden).toBe(true);
+
+            jest.advanceTimersByTime(8000);
+            expect(document.getElementById('tour-place-name').textContent).toBe('Reef');
+            expect(document.getElementById('tour-place-count').textContent).toBe('1 / 2');
+        });
+
+        test('arrow keys step through an active tour', () => {
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' },
+                { id: 'loc2', name: 'Desert', coords: [2, 2], description: 'A sandy desert.' }
+            ];
+            app.startAutoTour();
+
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+            expect(document.getElementById('tour-place-name').textContent).toBe('Desert');
+
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+            expect(document.getElementById('tour-place-name').textContent).toBe('Reef');
+        });
+
+        test('stopAutoTour clears the stepping state', () => {
+            app.locations = [
+                { id: 'loc1', name: 'Reef', coords: [1, 1], description: 'A beautiful coastal reef.' }
+            ];
+            app.startAutoTour();
+            app.stepTour(1);
+            app.stopAutoTour();
+
+            expect(app.isAutoTourActive).toBe(false);
+            expect(app.tourAuto).toBe(false);
+            expect(app.tourStopIndex).toBe(null);
+
+            // A fresh start begins clean at the first place
+            app.startAutoTour();
+            expect(app.tourAuto).toBe(true);
+            expect(document.getElementById('tour-place-count').textContent).toBe('1 / 1');
+        });
+
         test('updateParticles should create correct number of particles for biomes', () => {
             const particlesOverlay = document.getElementById('particles-overlay');
 

@@ -19,6 +19,14 @@ for(const motion of ['reduce','no-preference'])for(const width of [320,390,1440]
  await page.fill('#location-search','Ningaloo');await expect(page.locator('#location-list li:visible')).toHaveCount(1);await page.fill('#location-search','zzzz');await expect(page.locator('#location-list li:visible')).toHaveCount(0);await page.fill('#location-search','');await expect(page.locator('#location-list li:visible')).toHaveCount(21);
  await page.click('#close-drawer');await expect(page.locator('#info-drawer')).not.toHaveClass(/active/);await page.click('#browse-toggle');await expect(page.locator('#info-drawer')).toHaveClass(/active/);
  await page.click('#audio-toggle');await expect(page.locator('#audio-toggle')).toHaveAttribute('aria-pressed','true');await page.click('#audio-toggle');await expect(page.locator('#audio-toggle')).toHaveAttribute('aria-pressed','false');
- await page.click('#tour-toggle');await expect(page.locator('#tour-toggle')).toHaveText('Stop tour');await page.click('#tour-toggle');await expect(page.locator('#tour-toggle')).toHaveText('Start tour');await page.click('#reset-map');
+ await page.click('#tour-toggle');await expect(page.locator('#tour-toggle')).toHaveText('Stop tour');
+ await expect(page.locator('#cinematic-title')).toBeVisible();
+ await expect(page.locator('#tour-place-name')).toHaveText(names[0]);await expect(page.locator('#tour-place-count')).toHaveText('1 / 21');
+ await page.click('#tour-next');await expect(page.locator('#tour-place-name')).toHaveText(names[1]);await expect(page.locator('#tour-place-count')).toHaveText('2 / 21');await expect(page.locator('#tour-auto')).toBeVisible();
+ await page.screenshot({path:`verification/current/${width}-${motion}-tour.png`});
+ await page.click('#tour-prev');await expect(page.locator('#tour-place-name')).toHaveText(names[0]);await expect(page.locator('#tour-place-count')).toHaveText('1 / 21');
+ await page.keyboard.press('ArrowRight');await expect(page.locator('#tour-place-name')).toHaveText(names[1]);
+ await page.click('#tour-auto');await expect(page.locator('#tour-auto')).toBeHidden();
+ await page.click('#tour-toggle');await expect(page.locator('#tour-toggle')).toHaveText('Start tour');await expect(page.locator('#cinematic-title')).toBeHidden();await page.click('#reset-map');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
 });

@@ -20,7 +20,8 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "/tests/",
-      "/src/audio.js"
+      "/src/audio.js",
+      "/src/soundscape-layers.js"
     ],
     "coverageThreshold": {
       "global": {

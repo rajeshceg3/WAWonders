@@ -162,6 +162,25 @@ export class WAWondersApp {
         const tourButton=document.querySelector('#tour-toggle');if(tourButton)tourButton.textContent='Start tour';
         this.autoTourInterval = null;
         this.tourIndex = 0;
+        this.tourStopIndex = null;
+        this.tourAuto = true;
+
+        // Arrow keys step through an active tour without touching the pointer.
+        if (!this.tourKeyHandler) {
+            this.tourKeyHandler = (e) => {
+                if (!this.isAutoTourActive) return;
+                const tag = e.target && e.target.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    this.stepTour(1);
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    this.stepTour(-1);
+                }
+            };
+            document.addEventListener('keydown', this.tourKeyHandler);
+        }
 
         // Tours are explicit. Idle reading never hides controls or starts movement.
     }
@@ -195,18 +214,16 @@ export class WAWondersApp {
         // Ensure no active markers/list items remain selected
         this.updateActiveStates(null);
 
-        let cinematicTitle = document.getElementById('cinematic-title');
-        if (!cinematicTitle) {
-            cinematicTitle = document.createElement('div');
-            cinematicTitle.id = 'cinematic-title';
-            cinematicTitle.innerHTML = '<h1>Western Australia</h1><p>Cinematic Tour</p>';
-            document.body.appendChild(cinematicTitle);
-        }
+        this.buildTourCard();
+        const cinematicTitle = document.getElementById('cinematic-title');
         // Force reflow
         void cinematicTitle.offsetWidth;
         cinematicTitle.classList.add('active');
 
+        this.tourAuto = true;
+        this.tourStopIndex = null;
         this.tourIndex = 0;
+        this.updateTourCardControls();
         this.playNextTourLocation();
     }
 
@@ -214,8 +231,18 @@ export class WAWondersApp {
         if (!this.isAutoTourActive) return;
 
         if (!this.locations || this.locations.length === 0) return;
-        const loc = this.locations[this.tourIndex];
-        if (!loc || !loc.description) return;
+
+        if (!this.showTourStop(this.tourIndex)) return;
+        this.tourIndex = (this.tourIndex + 1) % this.locations.length;
+        if (this.tourAuto) {
+            this.autoTourInterval = setTimeout(() => this.playNextTourLocation(), 8000); // Move every 8 seconds in auto mode
+        }
+    }
+
+    showTourStop(index) {
+        const loc = this.locations[index];
+        if (!loc || !loc.description) return false;
+        this.tourStopIndex = index;
 
         // Fly to location
         if (this.map) {
@@ -245,8 +272,107 @@ export class WAWondersApp {
             }
         }
 
-        this.tourIndex = (this.tourIndex + 1) % this.locations.length;
-        this.autoTourInterval = setTimeout(() => this.playNextTourLocation(), 8000); // Move every 8 seconds
+        // The main card follows the place being visited.
+        this.updateTourCard(loc, index);
+        return true;
+    }
+
+    buildTourCard() {
+        let card = document.getElementById('cinematic-title');
+        if (!card) {
+            card = document.createElement('div');
+            card.id = 'cinematic-title';
+            document.body.appendChild(card);
+        }
+        card.innerHTML = '';
+
+        const name = document.createElement('h1');
+        name.id = 'tour-place-name';
+
+        const count = document.createElement('p');
+        count.id = 'tour-place-count';
+
+        const desc = document.createElement('p');
+        desc.id = 'tour-place-desc';
+
+        const controls = document.createElement('div');
+        controls.className = 'tour-controls';
+
+        const prevBtn = document.createElement('button');
+        prevBtn.id = 'tour-prev';
+        prevBtn.type = 'button';
+        prevBtn.textContent = '\u2190 Prev';
+        prevBtn.setAttribute('aria-label', 'Previous place');
+
+        const autoBtn = document.createElement('button');
+        autoBtn.id = 'tour-auto';
+        autoBtn.type = 'button';
+        autoBtn.textContent = 'Auto';
+        autoBtn.setAttribute('aria-label', 'Resume automatic tour');
+        autoBtn.hidden = true;
+
+        const nextBtn = document.createElement('button');
+        nextBtn.id = 'tour-next';
+        nextBtn.type = 'button';
+        nextBtn.textContent = 'Next \u2192';
+        nextBtn.setAttribute('aria-label', 'Next place');
+
+        prevBtn.addEventListener('click', () => { this.soundManager.playClickSound(); this.stepTour(-1); });
+        nextBtn.addEventListener('click', () => { this.soundManager.playClickSound(); this.stepTour(1); });
+        autoBtn.addEventListener('click', () => { this.soundManager.playClickSound(); this.resumeAutoTour(); });
+        prevBtn.addEventListener('mouseenter', () => this.soundManager.playHoverSound());
+        nextBtn.addEventListener('mouseenter', () => this.soundManager.playHoverSound());
+
+        const spacer = document.createElement('span');
+        spacer.className = 'spacer';
+
+        controls.appendChild(prevBtn);
+        controls.appendChild(autoBtn);
+        controls.appendChild(spacer);
+        controls.appendChild(nextBtn);
+
+        card.appendChild(name);
+        card.appendChild(count);
+        card.appendChild(desc);
+        card.appendChild(controls);
+    }
+
+    updateTourCard(loc, index) {
+        const name = document.getElementById('tour-place-name');
+        const count = document.getElementById('tour-place-count');
+        const desc = document.getElementById('tour-place-desc');
+        if (name) name.textContent = loc.name;
+        if (count) count.textContent = (index + 1) + ' / ' + this.locations.length;
+        if (desc) desc.textContent = loc.description;
+    }
+
+    updateTourCardControls() {
+        const autoBtn = document.getElementById('tour-auto');
+        if (autoBtn) autoBtn.hidden = this.tourAuto !== false;
+    }
+
+    stepTour(direction) {
+        if (!this.isAutoTourActive) return;
+        if (!this.locations || this.locations.length === 0) return;
+        clearTimeout(this.autoTourInterval);
+        this.tourAuto = false;
+        const len = this.locations.length;
+        const current = (this.tourStopIndex === null || this.tourStopIndex === undefined)
+            ? (this.tourIndex - 1 + len) % len
+            : this.tourStopIndex;
+        const target = (current + direction + len) % len;
+        if (this.showTourStop(target)) {
+            this.tourIndex = (target + 1) % len;
+        }
+        this.updateTourCardControls();
+    }
+
+    resumeAutoTour() {
+        if (!this.isAutoTourActive) return;
+        clearTimeout(this.autoTourInterval);
+        this.tourAuto = true;
+        this.updateTourCardControls();
+        this.autoTourInterval = setTimeout(() => this.playNextTourLocation(), 8000);
     }
 
     updateParticles(biome) {
@@ -288,6 +414,8 @@ export class WAWondersApp {
     stopAutoTour() {
         if (!this.isAutoTourActive) return;
         this.isAutoTourActive = false;
+        this.tourAuto = false;
+        this.tourStopIndex = null;
         const tourButton=document.querySelector('#tour-toggle');if(tourButton)tourButton.textContent='Start tour';
         clearTimeout(this.autoTourInterval);
 

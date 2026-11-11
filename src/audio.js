@@ -1,3 +1,31 @@
+import {
+    makeCtx, windNoise, lapping, rustle, birdChirps, insects, whistleWind, bloops, rumble,
+} from './soundscape-layers.js';
+
+/* Place-true ambience layers, synthesized (no samples, no voice). */
+const SEED = 2890;
+const LAYER_DEFS = {
+    shoreLap: { seconds: 10, seed: SEED + 1, render: (c) => lapping(c, { gain: 0.42, period: 2.9, depth: 0.55, seed: SEED + 1 }) },
+    coastWind: { seconds: 10, seed: SEED + 2, render: (c) => windNoise(c, { color: 0.03, gustDepth: 0.55, base: 0.4, seed: SEED + 2 }) },
+    gulls: { seconds: 10, seed: SEED + 3, render: (c) => birdChirps(c, { count: 4, fLo: 1100, fHi: 2000, durLo: 0.2, durHi: 0.45, gain: 0.16, minGap: 1.5, syllables: 2, seed: SEED + 3 }) },
+    desertWind: { seconds: 10, seed: SEED + 4, render: (c) => windNoise(c, { color: 0.03, gustDepth: 0.62, base: 0.44, seed: SEED + 4 }) },
+    rockWhistle: { seconds: 10, seed: SEED + 5, render: (c) => whistleWind(c, { fMin: 360, fMax: 1150, gain: 0.26, seed: SEED + 5 }) },
+    heatShimmer: { seconds: 10, seed: SEED + 6, render: (c) => insects(c, { f: 5500, pulseHz: 30, gain: 0.035, q: 26, seed: SEED + 6 }) },
+    canopyWind: { seconds: 10, seed: SEED + 7, render: (c) => windNoise(c, { color: 0.014, gustDepth: 0.5, base: 0.44, seed: SEED + 7 }) },
+    leafRustle: { seconds: 10, seed: SEED + 8, render: (c) => rustle(c, { gain: 0.15, seed: SEED + 8 }) },
+    forestBirds: { seconds: 10, seed: SEED + 9, render: (c) => birdChirps(c, { count: 9, fLo: 2100, fHi: 3500, gain: 0.22, trill: 15, syllables: 2, minGap: 0.8, seed: SEED + 9 }) },
+    stoneAir: { seconds: 10, seed: SEED + 10, render: (c) => windNoise(c, { color: 0.005, gustDepth: 0.3, base: 0.35, seed: SEED + 10 }) },
+    stoneDrips: { seconds: 10, seed: SEED + 11, render: (c) => bloops(c, { count: 10, fLo: 950, fHi: 1800, gain: 0.1, seed: SEED + 11 }) },
+    stoneRumble: { seconds: 10, seed: SEED + 12, render: (c) => rumble(c, { gain: 0.14, swellSec: 9, seed: SEED + 12 }) },
+};
+
+const BIOME_SCENES = {
+    coastal: [['shoreLap', 0.9], ['coastWind', 0.7], ['gulls', 0.7]],
+    desert: [['desertWind', 0.9], ['rockWhistle', 0.5], ['heatShimmer', 0.8]],
+    forest: [['canopyWind', 0.85], ['leafRustle', 0.9], ['forestBirds', 0.85]],
+    stone: [['stoneAir', 0.85], ['stoneDrips', 0.9], ['stoneRumble', 0.7]],
+};
+
 export class SoundManager {
     constructor() {
         this.ctx = null;
@@ -139,113 +167,45 @@ export class SoundManager {
 
         this.stopAmbience();
 
-        if (biome === 'coastal') {
-            this.startOceanAmbience();
-        } else if (biome === 'desert') {
-            this.startWindAmbience();
-        } else if (biome === 'forest') {
-            this.startForestAmbience();
-        }
+        this.startLayeredAmbience(biome);
     }
 
-    startOceanAmbience() {
+    /* Play a biome's layered scene: looped synthesized buffers, each with its
+     * own gain, faded in through ambientGain. All layers are seamless loops. */
+    startLayeredAmbience(biome) {
         if (!this.ctx) return;
+        const scene = BIOME_SCENES[biome];
+        if (!scene) return;
 
         const t = this.ctx.currentTime;
+        const sr = this.ctx.sampleRate;
 
-        // Brown noise for ocean roar
-        this.noiseNode = this._createNoise();
+        scene.forEach(([id, layerGain]) => {
+            const def = LAYER_DEFS[id];
+            const c = makeCtx(sr, def.seconds, def.seed);
+            const out = def.render(c) || c;
+            const buffer = this.ctx.createBuffer(2, out.L.length, sr);
+            buffer.getChannelData(0).set(out.L);
+            buffer.getChannelData(1).set(out.R);
 
-        // Lowpass filter to muffle it like waves
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 400;
-
-        // Modulate the filter frequency to simulate waves crashing
-        const lfo = this.ctx.createOscillator();
-        lfo.type = 'sine';
-        lfo.frequency.value = 0.1; // Slow wave (10 seconds per cycle)
-
-        const lfoGain = this.ctx.createGain();
-        lfoGain.gain.value = 300;
-
-        lfo.connect(lfoGain);
-        lfoGain.connect(filter.frequency);
-
-        this.noiseNode.connect(filter);
-        filter.connect(this.ambientGain);
-
-        this.noiseNode.start(t);
-        lfo.start(t);
-
-        this.ambientOscillators.push(this.noiseNode, lfo);
-
-        // Fade in
-        this.ambientGain.gain.cancelScheduledValues(t);
-        this.ambientGain.gain.setValueAtTime(0, t);
-        this.ambientGain.gain.linearRampToValueAtTime(0.15, t + 2);
-    }
-
-    startWindAmbience() {
-        if (!this.ctx) return;
-
-        const t = this.ctx.currentTime;
-
-        this.noiseNode = this._createNoise();
-
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.value = 1000;
-        filter.Q.value = 0.5;
-
-        // Modulate wind
-        const lfo = this.ctx.createOscillator();
-        lfo.type = 'sine';
-        lfo.frequency.value = 0.15;
-
-        const lfoGain = this.ctx.createGain();
-        lfoGain.gain.value = 800;
-
-        lfo.connect(lfoGain);
-        lfoGain.connect(filter.frequency);
-
-        this.noiseNode.connect(filter);
-        filter.connect(this.ambientGain);
-
-        this.noiseNode.start(t);
-        lfo.start(t);
-
-        this.ambientOscillators.push(this.noiseNode, lfo);
+            const src = this.ctx.createBufferSource();
+            src.buffer = buffer;
+            src.loop = true;
+            const g = this.ctx.createGain();
+            g.gain.value = layerGain;
+            src.connect(g);
+            g.connect(this.ambientGain);
+            src.start(t);
+            this.ambientOscillators.push(src);
+        });
 
         this.ambientGain.gain.cancelScheduledValues(t);
         this.ambientGain.gain.setValueAtTime(0, t);
-        this.ambientGain.gain.linearRampToValueAtTime(0.1, t + 2);
+        this.ambientGain.gain.linearRampToValueAtTime(0.5, t + 2);
     }
 
-    startForestAmbience() {
-        if (!this.ctx) return;
 
-        const t = this.ctx.currentTime;
 
-        // Soft rustling noise
-        this.noiseNode = this._createNoise();
-
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.value = 1500;
-
-        this.noiseNode.connect(filter);
-        filter.connect(this.ambientGain);
-
-        this.noiseNode.start(t);
-        this.ambientOscillators.push(this.noiseNode);
-
-        this.ambientGain.gain.cancelScheduledValues(t);
-        this.ambientGain.gain.setValueAtTime(0, t);
-        this.ambientGain.gain.linearRampToValueAtTime(0.05, t + 2);
-
-        // Procedural bird chirps could be added here, but keeping it simple for now
-    }
 
     playFlySound() {
         if (this.isMuted || !this.ctx) return;

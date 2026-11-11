@@ -8,6 +8,7 @@ export class WAWondersApp {
         this.markers = {};
         this.isAnimating = false;
         this.soundManager = new SoundManager();
+        window.__soundscape = this.soundManager;
         this.currentFlightPath = null;
         this.reducedMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -252,7 +253,9 @@ export class WAWondersApp {
         // Update biome logic
         let biome = 'desert';
         const desc = loc.description.toLowerCase();
-        if (desc.includes('reef') || desc.includes('beach') || desc.includes('ocean') || desc.includes('water') || desc.includes('bay')) {
+        if (desc.includes('prison') || desc.includes('tunnel') || desc.includes('cave')) {
+            biome = 'stone';
+        } else if (desc.includes('reef') || desc.includes('beach') || desc.includes('ocean') || desc.includes('water') || desc.includes('bay')) {
             biome = 'coastal';
         } else if (desc.includes('forest') || desc.includes('park') || desc.includes('tree')) {
             biome = 'forest';
@@ -709,7 +712,9 @@ export class WAWondersApp {
         // Determine biome based on location (simple heuristic based on keywords)
         let biome = 'desert'; // default
         const desc = location.description.toLowerCase();
-        if (desc.includes('reef') || desc.includes('beach') || desc.includes('ocean') || desc.includes('water') || desc.includes('bay')) {
+        if (desc.includes('prison') || desc.includes('tunnel') || desc.includes('cave')) {
+            biome = 'stone';
+        } else if (desc.includes('reef') || desc.includes('beach') || desc.includes('ocean') || desc.includes('water') || desc.includes('bay')) {
             biome = 'coastal';
         } else if (desc.includes('forest') || desc.includes('park') || desc.includes('tree')) {
             biome = 'forest';

@@ -3,7 +3,7 @@ const names=['Karijini National Park','Ningaloo Reef','The Pinnacles, Nambung','
 for(const motion of ['reduce','no-preference'])for(const width of [320,390,1440])test(`${width}px ${motion}: all 21 details, two themes and map controls`,async({page})=>{
  test.setTimeout(90000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6pL8AAAAASUVORK5CYII=','base64')}));
- await page.setViewportSize({width,height:844});await page.emulateMedia({reducedMotion:motion});await page.goto('./');await expect(page.locator('#location-list li')).toHaveCount(21);
+ await page.setViewportSize({width,height:844});await page.emulateMedia({reducedMotion:motion});await page.addInitScript(()=>{try{localStorage.setItem('wawonders-chrome-pin','1')}catch{}});await page.goto('./');await expect(page.locator('#location-list li')).toHaveCount(21);
  await expect(page.locator('#info-drawer')).toHaveClass(/active/);
  for(const selector of ['#browse-toggle','#reset-map','#tour-toggle','#theme-toggle','#audio-toggle','#location-search']){const r=await page.locator(selector).boundingBox();expect(r.x).toBeGreaterThanOrEqual(0);expect(r.x+r.width).toBeLessThanOrEqual(width+.1);expect(r.height).toBeGreaterThanOrEqual(44);}
  await page.screenshot({path:`verification/current/${width}-${motion}-map.png`});

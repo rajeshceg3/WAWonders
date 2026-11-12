@@ -35,7 +35,8 @@ const initChrome=()=>{
   const tc=document.querySelector('.top-controls');if(tc)tc.appendChild(pinBtn);
   let pinned=false;try{pinned=localStorage.getItem(PIN_KEY)==='1'}catch{}
   let chrome=true,focusWithin=false,retireTimer=0;
-  const apply=()=>{const on=chrome||pinned;els.forEach(e=>e.classList.toggle('chrome-on',on));hint.hidden=on};
+  const drawerOpen=()=>{const d=document.querySelector('#info-drawer');return d&&d.classList.contains('active')};
+  const apply=()=>{const on=chrome||pinned;els.forEach(e=>e.classList.toggle('chrome-on',on));hint.hidden=on||drawerOpen()};
   const retireSoon=()=>{clearTimeout(retireTimer);retireTimer=setTimeout(()=>{if(!focusWithin){chrome=false;apply()}},RETIRE_MS)};
   const wake=()=>{chrome=true;apply();retireSoon()};
   document.addEventListener('pointermove',e=>{if(e.pointerType==='touch')return;if(e.clientY<TOP_ZONE||e.clientY>innerHeight-BOTTOM_ZONE)wake()});
@@ -43,6 +44,8 @@ const initChrome=()=>{
   document.addEventListener('focusin',e=>{if(els.some(x=>x.contains(e.target))){focusWithin=true;clearTimeout(retireTimer);chrome=true;apply()}});
   document.addEventListener('focusout',e=>{if(!els.some(x=>x.contains(e.relatedTarget))){focusWithin=false;retireSoon()}});
   hint.addEventListener('click',wake);
+  const drawer=document.querySelector('#info-drawer');
+  if(drawer)new MutationObserver(apply).observe(drawer,{attributes:true,attributeFilter:['class']});
   const setPin=next=>{pinned=next;try{next?localStorage.setItem(PIN_KEY,'1'):localStorage.removeItem(PIN_KEY)}catch{}pinBtn.setAttribute('aria-pressed',String(next));pinBtn.textContent=next?'Unpin':'Pin';pinBtn.title=next?'Let controls retire':'Keep controls visible';if(next){chrome=true;apply()}else retireSoon()};
   pinBtn.addEventListener('click',()=>setPin(!pinned));
   if(pinned)setPin(true);
